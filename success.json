@@ -1,0 +1,31 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {
+            "text": "[\n  {\n    \"applicationId\": 1,\n    \"matchScore\": 98,\n    \"skillsMatchScore\": 100,\n    \"experienceScore\": 100,\n    \"certsScore\": 100,\n    \"roleRelevanceScore\": 100,\n    \"reasons\": [\n      \"Exceeds the minimum experience requirement with 5 years of mechanics experience.\",\n      \"Directly relevant work history as an HD Mechanic at a mining site (Asanko).\",\n      \"Possesses the mandatory mechanics skill at an expert level.\",\n      \"Verified certifications were uploaded to support technical claims.\"\n    ],\n    \"missingRequirements\": [\n      \"A cover letter to provide context on specific projects or achievements.\",\n      \"Detailed list of specific heavy-duty machinery brands serviced (e.g., CAT, Komatsu).\"\n    ],\n    \"evidenceExtracted\": {\n      \"currentRole\": \"HD Mechanic at Asanko\",\n      \"yearsOfExperience\": 5,\n      \"skillLevel\": \"Expert\",\n      \"documentStatus\": \"Certifications uploaded\"\n    }\n  }\n]",
+            "thoughtSignature": "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"
+          }
+        ],
+        "role": "model"
+      },
+      "finishReason": "STOP",
+      "index": 0
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 334,
+    "candidatesTokenCount": 252,
+    "totalTokenCount": 1403,
+    "promptTokensDetails": [
+      {
+        "modality": "TEXT",
+        "tokenCount": 334
+      }
+    ],
+    "thoughtsTokenCount": 817
+  },
+  "modelVersion": "gemini-3-flash-preview",
+  "responseId": "9Z3zac66O7OVkdUP2oKSgAw"
+}
