@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils/cn';
 import {
   User, Briefcase, CheckCircle, Bell, Home, Users, Shield,
-  BarChart2, FileText, ClipboardList, Settings, LogOut, HardHat
+  BarChart2, FileText, ClipboardList, Settings, LogOut, HardHat, PanelLeftClose, PanelLeftOpen
 } from 'lucide-react';
 
 interface NavItem {
@@ -57,9 +57,12 @@ interface SidebarProps {
   role: string;
   userName: string;
   userEmail: string;
+  collapsed: boolean;
+  onToggle: () => void;
+  onNavigate: () => void;
 }
 
-export function Sidebar({ role, userName, userEmail }: SidebarProps) {
+export function Sidebar({ role, userName, userEmail, collapsed, onToggle, onNavigate }: SidebarProps) {
   const pathname = usePathname();
   const navItems = navByRole[role] || [];
 
@@ -69,57 +72,99 @@ export function Sidebar({ role, userName, userEmail }: SidebarProps) {
   };
 
   return (
-    <aside className="fixed left-0 top-0 h-full w-64 bg-slate-900 text-white flex flex-col z-40">
+    <aside className={cn(
+      'fixed inset-y-0 left-0 bg-slate-900 text-white flex flex-col z-40 transition-all duration-200',
+      collapsed ? 'w-20' : 'w-64'
+    )}>
       {/* Logo */}
-      <div className="flex items-center gap-3 px-6 py-5 border-b border-slate-700">
+      <div className={cn('flex items-center py-5 border-b border-slate-700 relative', collapsed ? 'justify-center px-2' : 'gap-3 px-6')}>
         <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
           <HardHat size={18} className="text-white" />
         </div>
-        <div>
-          <div className="text-sm font-semibold leading-tight">Talent Platform</div>
-          <div className="text-xs text-slate-400 leading-tight">Mining Recruitment</div>
-        </div>
+        {!collapsed && (
+          <div>
+            <div className="text-sm font-semibold leading-tight">Talent Platform</div>
+            <div className="text-xs text-slate-400 leading-tight">Mining Recruitment</div>
+          </div>
+        )}
+        {!collapsed && (
+          <button
+            onClick={onToggle}
+            className="absolute top-3 right-3 flex items-center justify-center w-8 h-8 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+            title="Collapse sidebar"
+            aria-label="Collapse sidebar"
+          >
+            <PanelLeftClose size={16} />
+          </button>
+        )}
+      </div>
+
+      <div className={cn('border-b border-slate-700 py-2', collapsed ? 'px-2' : 'px-3')}>
+        {!collapsed ? (
+          <div className="h-8" />
+        ) : (
+          <button
+            onClick={onToggle}
+            className="w-full flex items-center justify-center rounded-lg text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors px-2 py-2.5"
+            title="Expand sidebar"
+            aria-label="Expand sidebar"
+          >
+            <PanelLeftOpen size={16} />
+          </button>
+        )}
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+      <nav className={cn('flex-1 py-4 space-y-1 overflow-y-auto', collapsed ? 'px-2' : 'px-3')}>
         {navItems.map(item => {
-          const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+          const isDashboard = item.label === 'Dashboard';
+          const isActive = pathname === item.href || (!isDashboard && pathname.startsWith(item.href + '/'));
           return (
             <Link
               key={item.href}
               href={item.href}
+              onClick={() => {
+                if (pathname !== item.href) onNavigate();
+              }}
+              title={collapsed ? item.label : undefined}
               className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                'flex items-center rounded-lg text-sm font-medium transition-colors',
+                collapsed ? 'justify-center px-2 py-2.5' : 'gap-3 px-3 py-2.5',
                 isActive
                   ? 'bg-blue-600 text-white'
                   : 'text-slate-300 hover:bg-slate-800 hover:text-white'
               )}
             >
               {item.icon}
-              {item.label}
+              {!collapsed && item.label}
             </Link>
           );
         })}
       </nav>
 
       {/* User footer */}
-      <div className="border-t border-slate-700 p-4">
-        <div className="flex items-center gap-3 mb-3">
+      <div className={cn('border-t border-slate-700', collapsed ? 'p-2' : 'p-4')}>
+        <div className={cn('mb-3', collapsed ? 'flex justify-center' : 'flex items-center gap-3')}>
           <div className="w-8 h-8 rounded-full bg-slate-600 flex items-center justify-center text-sm font-medium">
             {userName?.charAt(0)?.toUpperCase() || 'U'}
           </div>
-          <div className="min-w-0">
-            <div className="text-sm font-medium text-white truncate">{userName || userEmail}</div>
-            <div className="text-xs text-slate-400 truncate">{role.replace('_', ' ')}</div>
-          </div>
+          {!collapsed && (
+            <div className="min-w-0">
+              <div className="text-sm font-medium text-white truncate">{userName || userEmail}</div>
+              <div className="text-xs text-slate-400 truncate">{role.replace('_', ' ')}</div>
+            </div>
+          )}
         </div>
         <button
           onClick={handleLogout}
-          className="flex items-center gap-2 w-full px-3 py-2 text-sm text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+          title={collapsed ? 'Sign out' : undefined}
+          className={cn(
+            'w-full text-sm text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors',
+            collapsed ? 'flex justify-center px-2 py-2.5' : 'flex items-center gap-2 px-3 py-2'
+          )}
         >
           <LogOut size={16} />
-          Sign out
+          {!collapsed && 'Sign out'}
         </button>
       </div>
     </aside>

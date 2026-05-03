@@ -1,4 +1,8 @@
 // src/components/shared/DashboardLayout.tsx
+'use client';
+
+import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { Sidebar } from './Sidebar';
 
 interface DashboardLayoutProps {
@@ -9,10 +13,39 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ role, userName, userEmail, children }: DashboardLayoutProps) {
+  const pathname = usePathname();
+  const [collapsed, setCollapsed] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem('sidebar_collapsed');
+    if (stored === '1') setCollapsed(true);
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem('sidebar_collapsed', collapsed ? '1' : '0');
+  }, [collapsed]);
+
+  useEffect(() => {
+    setIsNavigating(false);
+  }, [pathname]);
+
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <Sidebar role={role} userName={userName} userEmail={userEmail} />
-      <main className="flex-1 ml-64 min-h-screen">
+      <Sidebar
+        role={role}
+        userName={userName}
+        userEmail={userEmail}
+        collapsed={collapsed}
+        onToggle={() => setCollapsed(prev => !prev)}
+        onNavigate={() => setIsNavigating(true)}
+      />
+      <main className={`flex-1 min-h-screen transition-all duration-200 ${collapsed ? 'ml-20' : 'ml-64'}`}>
+        {isNavigating && (
+          <div className="fixed top-4 right-4 z-50 pointer-events-none">
+            <div className="w-5 h-5 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
+          </div>
+        )}
         <div className="max-w-6xl mx-auto px-6 py-8">
           {children}
         </div>
