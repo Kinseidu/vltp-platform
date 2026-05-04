@@ -113,6 +113,17 @@ async function main() {
     },
   });
 
+  const yp3 = await prisma.user.upsert({
+    where: { email: 'yp.bondaye@gmail.com' },
+    update: {},
+    create: {
+      email: 'yp.bondaye@gmail.com',
+      phone: '+233244000012',
+      passwordHash: await bcrypt.hash('Youth@123', 12),
+      role: UserRole.YOUTH_PRESIDENT,
+    },
+  });
+
   // Assign YPs to communities
   await prisma.community.update({
     where: { id: communities[0].id },
@@ -121,6 +132,10 @@ async function main() {
   await prisma.community.update({
     where: { id: communities[1].id },
     data: { youthPresidentId: yp2.id },
+  });
+  await prisma.community.update({
+    where: { id: communities[2].id },
+    data: { youthPresidentId: yp3.id },
   });
 
   // ── CHIEF STAFF USER ─────────────────────────────────────────────────────────
@@ -264,8 +279,8 @@ async function main() {
       });
     }
 
-    // Verification requests for non-pending
-    if (applicantData.verificationStatus !== VerificationStatus.PENDING) {
+    // Verification requests for all
+    if (applicantData.verificationStatus !== VerificationStatus.PENDING || true) {
       const verReq = await prisma.verificationRequest.create({
         data: {
           applicantId: profile.id,
@@ -274,8 +289,8 @@ async function main() {
         },
       });
 
-      if ([VerificationStatus.YOUTH_APPROVED, VerificationStatus.CHIEF_CONFIRMED, VerificationStatus.VERIFIED].includes(applicantData.verificationStatus)) {
-        const communityYP = applicantData.communityIdx === 0 ? yp1 : yp2;
+      if (([VerificationStatus.YOUTH_APPROVED, VerificationStatus.CHIEF_CONFIRMED, VerificationStatus.VERIFIED] as VerificationStatus[]).includes(applicantData.verificationStatus)) {
+        const communityYP = applicantData.communityIdx === 0 ? yp1 : (applicantData.communityIdx === 1 ? yp2 : yp3);
         await prisma.youthVerification.create({
           data: {
             requestId: verReq.id,

@@ -3,19 +3,20 @@ import { prisma } from '@/lib/db/prisma';
 import { getSession } from '@/lib/auth/jwt';
 import { UserRole } from '@prisma/client';
 import { audit } from '@/lib/services/audit.service';
+import { unauthorized, serverError } from '@/lib/utils/api';
 
 export async function GET(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session || session.role !== UserRole.ADMIN) {
-      return new NextResponse('Unauthorized', { status: 401 });
+      return unauthorized();
     }
 
     const settings = await prisma.systemSetting.findMany();
     return NextResponse.json({ success: true, data: { settings } });
   } catch (error) {
     console.error('[Admin Settings GET]', error);
-    return new NextResponse('Internal Server Error', { status: 500 });
+    return serverError();
   }
 }
 
@@ -23,7 +24,7 @@ export async function PUT(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session || session.role !== UserRole.ADMIN) {
-      return new NextResponse('Unauthorized', { status: 401 });
+      return unauthorized();
     }
 
     const { settings } = await req.json();
@@ -49,6 +50,6 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ success: true, message: 'Settings updated' });
   } catch (error) {
     console.error('[Admin Settings PUT]', error);
-    return new NextResponse('Internal Server Error', { status: 500 });
+    return serverError();
   }
 }

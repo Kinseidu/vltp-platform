@@ -16,7 +16,7 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetch('/api/admin/communities')
+    fetch('/api/communities')
       .then(r => r.json())
       .then(d => d.success && setCommunities(d.data.communities));
   }, []);
@@ -69,7 +69,7 @@ export default function RegisterPage() {
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
             <p className="text-xs text-blue-800">
-              <strong>Note:</strong> You will need to upload documents later when applying for a specific job. 
+              <strong>Note:</strong> You will need to upload documents later when applying for a specific job.
               No documents are required to register.
             </p>
           </div>

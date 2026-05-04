@@ -3,12 +3,13 @@ import { prisma } from '@/lib/db/prisma';
 import { getSession } from '@/lib/auth/jwt';
 import { UserRole } from '@prisma/client';
 import { audit } from '@/lib/services/audit.service';
+import { unauthorized, serverError, error as apiError } from '@/lib/utils/api';
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await getSession();
     if (!session || session.role !== UserRole.ADMIN) {
-      return new NextResponse('Unauthorized', { status: 401 });
+      return unauthorized();
     }
 
     const { youthPresidentId } = await req.json();
@@ -18,13 +19,13 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     if (youthPresidentId) {
       const ypUser = await prisma.user.findUnique({ where: { id: youthPresidentId } });
       if (!ypUser || ypUser.role !== UserRole.YOUTH_PRESIDENT) {
-        return new NextResponse('User is not a valid Youth President', { status: 400 });
+        return apiError('User is not a valid Youth President', 400);
       }
 
       // Check if this YP is already assigned to another community
       const existing = await prisma.community.findFirst({ where: { youthPresidentId } });
       if (existing && existing.id !== communityId) {
-        return new NextResponse('Youth President is already assigned to another community', { status: 400 });
+        return apiError('Youth President is already assigned to another community', 400);
       }
     }
 
@@ -44,6 +45,6 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     return NextResponse.json({ success: true, data: { community } });
   } catch (error) {
     console.error('[Admin Community YP PUT]', error);
-    return new NextResponse('Internal Server Error', { status: 500 });
+    return serverError();
   }
 }

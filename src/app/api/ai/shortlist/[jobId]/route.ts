@@ -2,7 +2,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db/prisma';
 import { getSession } from '@/lib/auth/jwt';
-import { ok, created, forbidden, notFound, error, withErrorHandler } from '@/lib/utils/api';
+import { unauthorized, notFound, serverError, ok, created, error as apiError, withErrorHandler } from '@/lib/utils/api';
 import { audit } from '@/lib/services/audit.service';
 import { generateShortlist } from '@/lib/ai/ai.service';
 import { UserRole } from '@prisma/client';
@@ -11,7 +11,7 @@ import { UserRole } from '@prisma/client';
 export const GET = withErrorHandler(async (req: NextRequest, { params }: { params: { jobId: string } }) => {
   const session = await getSession();
   if (!session || (session.role !== UserRole.HR_OFFICER && session.role !== UserRole.ADMIN)) {
-    return forbidden();
+    return unauthorized();
   }
 
   const jobId = parseInt(params.jobId);
@@ -41,7 +41,7 @@ export const GET = withErrorHandler(async (req: NextRequest, { params }: { param
 export const POST = withErrorHandler(async (req: NextRequest, { params }: { params: { jobId: string } }) => {
   const session = await getSession();
   if (!session || (session.role !== UserRole.HR_OFFICER && session.role !== UserRole.ADMIN)) {
-    return forbidden();
+    return unauthorized();
   }
 
   const jobId = parseInt(params.jobId);
@@ -77,8 +77,10 @@ export const POST = withErrorHandler(async (req: NextRequest, { params }: { para
   });
 
   if (rawApplications.length === 0) {
-    return error('No applications found for this job', 404);
+    return apiError('No applications found for this job', 404);
   }
+
+  try {
 
   // Generate shortlist (hard filter + AI ranking)
   const shortlistResults = await generateShortlist(job as any, rawApplications as any);
@@ -126,12 +128,16 @@ export const POST = withErrorHandler(async (req: NextRequest, { params }: { para
     after: { applicantsProcessed: shortlistResults.length } as any,
   });
 
-  return created({
-    shortlist: shortlistResults,
-    summary: {
-      total: shortlistResults.length,
-      eligible: shortlistResults.filter(r => r.eligibilityStatus === 'ELIGIBLE').length,
-      ineligible: shortlistResults.filter(r => r.eligibilityStatus !== 'ELIGIBLE').length,
-    },
-  });
+    return created({
+      shortlist: shortlistResults,
+      summary: {
+        total: shortlistResults.length,
+        eligible: shortlistResults.filter(r => r.eligibilityStatus === 'ELIGIBLE').length,
+        ineligible: shortlistResults.filter(r => r.eligibilityStatus !== 'ELIGIBLE').length,
+      },
+    });
+  } catch (err: any) {
+    console.error('[Admin AI Shortlist POST]', err);
+    return serverError(err.message || 'Failed to generate AI shortlist');
+  }
 });
