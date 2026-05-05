@@ -14,9 +14,13 @@ const anthropic = new Anthropic({
 });
 
 const AI_MODEL = 'claude-sonnet-4-20250514';
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
 
 function parseJSONArrayFromText<T>(rawText: string): T[] {
+  if (!rawText || rawText.trim() === '') {
+    throw new Error('AI returned an empty response');
+  }
+
   const cleaned = rawText.replace(/```json|```/g, '').trim();
 
   // First try direct parse.
@@ -28,8 +32,14 @@ function parseJSONArrayFromText<T>(rawText: string): T[] {
     const end = cleaned.lastIndexOf(']');
     if (start >= 0 && end > start) {
       const sliced = cleaned.slice(start, end + 1);
-      return JSON.parse(sliced) as T[];
+      try {
+        return JSON.parse(sliced) as T[];
+      } catch (e) {
+        console.error('[AI] JSON slice parse failed:', sliced);
+        throw new Error('AI response contained invalid JSON array');
+      }
     }
+    console.error('[AI] Raw response was not JSON:', cleaned);
     throw new Error('AI response did not contain a valid JSON array');
   }
 }
@@ -63,7 +73,7 @@ async function generateAIText(prompt: string, maxTokens: number): Promise<string
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
             maxOutputTokens: maxTokens,
-            temperature: 0.1,
+            temperature: 0.7, // Slightly higher for more variety in questions
             responseMimeType: 'application/json',
           },
         }),
@@ -71,18 +81,27 @@ async function generateAIText(prompt: string, maxTokens: number): Promise<string
     );
 
     if (!res.ok) {
-      const errText = await res.text();
-      throw new Error(`Gemini API error (${res.status}): ${errText}`);
+      const errData = await res.json().catch(() => ({ error: { message: 'Unknown error' } }));
+      throw new Error(`Gemini API error (${res.status}): ${errData.error?.message || 'Unknown error'}`);
     }
 
     const data = await res.json() as {
       candidates?: Array<{
         content?: { parts?: Array<{ text?: string }> };
+        finishReason?: string;
       }>;
     };
 
-    const text = data.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
+    if (!data.candidates || data.candidates.length === 0) {
+      throw new Error('Gemini API returned no candidates. Safety filters may have blocked the response.');
+    }
+
+    const text = data.candidates[0].content?.parts?.map(p => p.text || '').join('') || '';
+    
     if (!text.trim()) {
+      if (data.candidates[0].finishReason === 'SAFETY') {
+        throw new Error('Gemini API blocked the response due to safety filters.');
+      }
       throw new Error('Gemini API returned an empty response');
     }
 

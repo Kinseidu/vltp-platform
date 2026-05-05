@@ -3,7 +3,7 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db/prisma';
 import { getSession } from '@/lib/auth/jwt';
-import { ok, created, error, forbidden, notFound, withErrorHandler } from '@/lib/utils/api';
+import { unauthorized, notFound, serverError, ok, created, error as apiError, withErrorHandler } from '@/lib/utils/api';
 import { audit } from '@/lib/services/audit.service';
 import { generateInterviewQuestions } from '@/lib/ai/ai.service';
 import { QuestionType, UserRole } from '@prisma/client';
@@ -12,7 +12,7 @@ import { QuestionType, UserRole } from '@prisma/client';
 export const GET = withErrorHandler(async (req: NextRequest, { params }: { params: { appId: string } }) => {
   const session = await getSession();
   if (!session || (session.role !== UserRole.HR_OFFICER && session.role !== UserRole.ADMIN)) {
-    return forbidden();
+    return unauthorized();
   }
 
   const appId = parseInt(params.appId);
@@ -30,7 +30,7 @@ export const GET = withErrorHandler(async (req: NextRequest, { params }: { param
 export const POST = withErrorHandler(async (req: NextRequest, { params }: { params: { appId: string } }) => {
   const session = await getSession();
   if (!session || (session.role !== UserRole.HR_OFFICER && session.role !== UserRole.ADMIN)) {
-    return forbidden();
+    return unauthorized();
   }
 
   const appId = parseInt(params.appId);
@@ -61,35 +61,40 @@ export const POST = withErrorHandler(async (req: NextRequest, { params }: { para
 
   if (!application) return notFound('Application not found');
 
-  // Generate questions via AI
-  const questions = await generateInterviewQuestions(application.job as any, application as any);
+  try {
+    // Generate questions via AI
+    const questions = await generateInterviewQuestions(application.job as any, application as any);
 
-  // Persist the pack
-  const pack = await prisma.interviewQuestionPack.create({
-    data: {
-      applicationId: appId,
-      questions: {
-        create: questions.map((q, idx) => ({
-          type: q.type,
-          question: q.question,
-          rubric: q.rubric,
-          mappedTo: q.mappedTo,
-          displayOrder: idx + 1,
-        })),
+    // Persist the pack
+    const pack = await prisma.interviewQuestionPack.create({
+      data: {
+        applicationId: appId,
+        questions: {
+          create: questions.map((q, idx) => ({
+            type: q.type,
+            question: q.question,
+            rubric: q.rubric,
+            mappedTo: q.mappedTo,
+            displayOrder: idx + 1,
+          })),
+        },
       },
-    },
-    include: { questions: { orderBy: { displayOrder: 'asc' } } },
-  });
+      include: { questions: { orderBy: { displayOrder: 'asc' } } },
+    });
 
-  await audit({
-    actorId: session.id,
-    action: 'INTERVIEW_QUESTIONS_GENERATED',
-    entity: 'InterviewQuestionPack',
-    entityId: pack.id,
-    after: { applicationId: appId, questionCount: questions.length } as any,
-  });
+    await audit({
+      actorId: session.id,
+      action: 'INTERVIEW_QUESTIONS_GENERATED',
+      entity: 'InterviewQuestionPack',
+      entityId: pack.id,
+      after: { applicationId: appId, questionCount: questions.length } as any,
+    });
 
-  return created({ pack }, `Generated ${questions.length} interview questions`);
+    return created({ pack }, `Generated ${questions.length} interview questions`);
+  } catch (err: any) {
+    console.error('[AI Interview Questions POST]', err);
+    return serverError(err.message || 'Failed to generate interview questions');
+  }
 });
 
 // PUT: Edit questions in a pack

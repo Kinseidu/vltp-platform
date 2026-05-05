@@ -56,13 +56,20 @@ export default function HRApplicationDetailPage() {
 
   const generateQuestions = async () => {
     setGeneratingQ(true);
-    const res = await fetch(`/api/ai/interview-questions/${id}`, { method: 'POST' });
-    const data = await res.json();
-    if (data.success) {
-      setPack(data.data.pack);
-      setMessage('');
-    } else {
-      setMessage(data.error || 'Failed to generate questions');
+    setMessage('');
+    try {
+      const res = await fetch(`/api/ai/interview-questions/${id}`, { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        setPack(data.data.pack);
+        setMessage('Interview questions ' + (pack ? 'regenerated' : 'generated') + ' successfully');
+        // Clear message after 3 seconds
+        setTimeout(() => setMessage(''), 3000);
+      } else {
+        setMessage(data.error || 'Failed to generate questions');
+      }
+    } catch (err) {
+      setMessage('Network error while generating questions');
     }
     setGeneratingQ(false);
   };
@@ -144,7 +151,9 @@ export default function HRApplicationDetailPage() {
       </div>
 
       {message && (
-        <div className="bg-red-50 text-red-700 text-sm px-4 py-3 rounded-lg border border-red-200 mb-4">{message}</div>
+        <div className={`${message.toLowerCase().includes('failed') || message.toLowerCase().includes('error') ? 'bg-red-50 text-red-700 border-red-200' : 'bg-green-50 text-green-700 border-green-200'} text-sm px-4 py-3 rounded-lg border mb-4 animate-in fade-in slide-in-from-top-1`}>
+          {message}
+        </div>
       )}
 
       <div className="grid lg:grid-cols-3 gap-6">

@@ -24,7 +24,7 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
     where: {
       status: status as any || undefined,
       applicant: { communityId: community.id },
-      youthVerification: null, // Only unreviewed requests
+      youthVerification: { is: null }, // Only unreviewed requests
     },
     include: {
       applicant: {

@@ -52,15 +52,23 @@ export default function ShortlistingPage() {
     if (!selectedJob) return;
     setRunning(true);
     setMessage('');
+    setResults([]);
+    setSummary(null);
 
-    const res = await fetch(`/api/ai/shortlist/${selectedJob}`, { method: 'POST' });
-    const data = await res.json();
+    try {
+      const res = await fetch(`/api/ai/shortlist/${selectedJob}`, { method: 'POST' });
+      const data = await res.json();
 
-    if (data.success) {
-      setResults(data.data.shortlist);
-      setSummary(data.data.summary);
-    } else {
-      setMessage(data.error || 'Shortlisting failed');
+      if (data.success) {
+        setResults(data.data.shortlist);
+        setSummary(data.data.summary);
+        setMessage('AI Shortlist analysis complete');
+        setTimeout(() => setMessage(''), 5000);
+      } else {
+        setMessage(data.error || 'Shortlisting failed');
+      }
+    } catch (err) {
+      setMessage('Network error during AI analysis');
     }
     setRunning(false);
   };
@@ -126,7 +134,9 @@ export default function ShortlistingPage() {
       </div>
 
       {message && (
-        <div className="bg-red-50 text-red-700 text-sm px-4 py-3 rounded-lg border border-red-200 mb-4">{message}</div>
+        <div className={`${message.toLowerCase().includes('failed') || message.toLowerCase().includes('error') ? 'bg-red-50 text-red-700 border-red-200' : 'bg-green-50 text-green-700 border-green-200'} text-sm px-4 py-3 rounded-lg border mb-4 animate-in fade-in slide-in-from-top-1`}>
+          {message}
+        </div>
       )}
 
       {/* AI disclaimer */}

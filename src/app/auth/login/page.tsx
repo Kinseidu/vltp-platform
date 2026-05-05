@@ -3,7 +3,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { HardHat, Eye, EyeOff, Loader2 } from 'lucide-react';
 
 const ROLE_REDIRECTS: Record<string, string> = {
@@ -15,7 +14,6 @@ const ROLE_REDIRECTS: Record<string, string> = {
 };
 
 export default function LoginPage() {
-  const router = useRouter();
   const [form, setForm] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -30,6 +28,7 @@ export default function LoginPage() {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(form),
       });
       const contentType = res.headers.get('content-type') || '';
@@ -46,7 +45,10 @@ export default function LoginPage() {
       }
 
       const redirect = ROLE_REDIRECTS[data.data.user.role] || '/applicant';
-      router.push(redirect);
+      // Use a hard redirect so the browser sends the new session cookie
+      // on the very first request to the dashboard (router.push is client-side
+      // and can race with cookie propagation).
+      window.location.href = redirect;
     } catch {
       setError('Network error. Please try again.');
     } finally {

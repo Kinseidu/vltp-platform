@@ -3,12 +3,13 @@ import { prisma } from '@/lib/db/prisma';
 import { getSession } from '@/lib/auth/jwt';
 import { UserRole, NotificationType } from '@prisma/client';
 import { audit } from '@/lib/services/audit.service';
+import { unauthorized, serverError } from '@/lib/utils/api';
 
 export async function POST(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session || session.role !== UserRole.ADMIN) {
-      return new NextResponse('Unauthorized', { status: 401 });
+      return unauthorized();
     }
 
     const { title, message, targetRole, targetCommunityId } = await req.json();
@@ -41,6 +42,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, data: { sentCount: targetUsers.length } });
   } catch (error) {
     console.error('[Admin Announcements POST]', error);
-    return new NextResponse('Internal Server Error', { status: 500 });
+    return serverError();
   }
 }

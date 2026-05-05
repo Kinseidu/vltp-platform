@@ -30,7 +30,8 @@ const navByRole: Record<string, NavItem[]> = {
   ],
   CHIEF_STAFF: [
     { href: '/chief-staff', label: 'Dashboard', icon: <Home size={18} /> },
-    { href: '/chief-staff/confirmations', label: 'Chief Confirmations', icon: <Shield size={18} /> },
+    { href: '/chief-staff/confirmations', label: 'Pending Queue', icon: <CheckCircle size={18} /> },
+    { href: '/chief-staff/history', label: 'Decision History', icon: <Shield size={18} /> },
   ],
   HR_OFFICER: [
     { href: '/hr', label: 'Dashboard', icon: <Home size={18} /> },

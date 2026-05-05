@@ -2,14 +2,18 @@
 
 import { useEffect, useState } from 'react';
 import { DashboardLayout, PageHeader } from '@/components/shared/DashboardLayout';
-import { MapPin, Plus, Edit2 } from 'lucide-react';
+import { MapPin, Plus, UserPlus, Loader2, X } from 'lucide-react';
 
 export default function AdminCommunities() {
   const [communities, setCommunities] = useState<any[]>([]);
+  const [youthPresidents, setYouthPresidents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [showAssignModal, setShowAssignModal] = useState<number | null>(null);
+  const [processing, setProcessing] = useState(false);
   
   const [formData, setFormData] = useState({ name: '', region: '', description: '' });
+  const [selectedYp, setSelectedYp] = useState<string>('');
 
   const fetchCommunities = async () => {
     setLoading(true);
@@ -21,12 +25,22 @@ export default function AdminCommunities() {
     setLoading(false);
   };
 
+  const fetchYPs = async () => {
+    const res = await fetch('/api/admin/users?role=YOUTH_PRESIDENT');
+    const data = await res.json();
+    if (data.success) {
+      setYouthPresidents(data.data.users || []);
+    }
+  };
+
   useEffect(() => {
     fetchCommunities();
+    fetchYPs();
   }, []);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    setProcessing(true);
     try {
       const res = await fetch('/api/admin/communities', {
         method: 'POST',
@@ -41,10 +55,31 @@ export default function AdminCommunities() {
     } catch (e) {
       console.error(e);
     }
+    setProcessing(false);
+  };
+
+  const handleAssignYP = async () => {
+    if (showAssignModal === null) return;
+    setProcessing(true);
+    try {
+      const res = await fetch(`/api/admin/communities/${showAssignModal}/youth-president`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ youthPresidentId: selectedYp || null }),
+      });
+      if (res.ok) {
+        setShowAssignModal(null);
+        setSelectedYp('');
+        fetchCommunities();
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    setProcessing(false);
   };
 
   return (
-    <DashboardLayout role="ADMIN" userName="Admin" userEmail="admin@example.com">
+    <DashboardLayout role="ADMIN" userName="Admin" userEmail="admin@miningco.gh">
       <PageHeader 
         title="Community Management" 
         subtitle="Add and manage eligible host communities and their metadata." 
@@ -65,7 +100,7 @@ export default function AdminCommunities() {
               <th className="px-6 py-3 font-semibold">Community Name</th>
               <th className="px-6 py-3 font-semibold">Region</th>
               <th className="px-6 py-3 font-semibold">Youth President</th>
-              <th className="px-6 py-3 font-semibold text-right">Applicants Linked</th>
+              <th className="px-6 py-3 font-semibold text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -90,15 +125,31 @@ export default function AdminCommunities() {
                   <td className="px-6 py-4">{c.region}</td>
                   <td className="px-6 py-4">
                     {c.youthPresident ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-700">
-                        {c.youthPresident.email}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-700">
+                          {c.youthPresident.email}
+                        </span>
+                        <button 
+                          onClick={() => { setShowAssignModal(c.id); setSelectedYp(''); }}
+                          className="text-gray-400 hover:text-blue-600 p-1"
+                          title="Change Assignment"
+                        >
+                          <UserPlus size={14} />
+                        </button>
+                      </div>
                     ) : (
-                      <span className="text-xs text-gray-400 italic">Unassigned</span>
+                      <button 
+                        onClick={() => { setShowAssignModal(c.id); setSelectedYp(''); }}
+                        className="text-xs text-blue-600 hover:underline flex items-center gap-1"
+                      >
+                        <UserPlus size={12} /> Assign YP
+                      </button>
                     )}
                   </td>
-                  <td className="px-6 py-4 text-right font-medium text-gray-900">
-                    {c._count?.applicantProfiles || 0}
+                  <td className="px-6 py-4 text-right">
+                    <span className="text-xs text-gray-400">
+                      {c._count?.applicantProfiles || 0} applicants
+                    </span>
                   </td>
                 </tr>
               ))
@@ -107,12 +158,13 @@ export default function AdminCommunities() {
         </table>
       </div>
 
+      {/* Add Community Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
               <h3 className="font-bold text-lg text-gray-900">Add New Community</h3>
-              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600">&times;</button>
+              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
             </div>
             <form onSubmit={handleCreate} className="p-6 space-y-4">
               <div>
@@ -129,9 +181,55 @@ export default function AdminCommunities() {
               </div>
               <div className="pt-4 flex justify-end gap-3">
                 <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg border">Cancel</button>
-                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg">Save Community</button>
+                <button type="submit" disabled={processing} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg flex items-center gap-2">
+                  {processing && <Loader2 size={14} className="animate-spin" />}
+                  Save Community
+                </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Assign YP Modal */}
+      {showAssignModal !== null && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+              <h3 className="font-bold text-lg text-gray-900">Assign Youth President</h3>
+              <button onClick={() => setShowAssignModal(null)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+            </div>
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-gray-600">
+                Select a registered Youth President for <strong>{communities.find(c => c.id === showAssignModal)?.name}</strong>.
+              </p>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Youth President</label>
+                <select 
+                  value={selectedYp} 
+                  onChange={e => setSelectedYp(e.target.value)}
+                  className="w-full border-gray-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 border"
+                >
+                  <option value="">-- Unassigned --</option>
+                  {youthPresidents.map(yp => (
+                    <option key={yp.id} value={yp.id}>
+                      {yp.email} ({yp.isActive ? 'Active' : 'Inactive'})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="pt-4 flex justify-end gap-3">
+                <button type="button" onClick={() => setShowAssignModal(null)} className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg border">Cancel</button>
+                <button 
+                  onClick={handleAssignYP} 
+                  disabled={processing}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg flex items-center gap-2"
+                >
+                  {processing && <Loader2 size={14} className="animate-spin" />}
+                  Confirm Assignment
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

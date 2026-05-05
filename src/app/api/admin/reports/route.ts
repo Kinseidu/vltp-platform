@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db/prisma';
 import { getSession } from '@/lib/auth/jwt';
 import { UserRole } from '@prisma/client';
+import { unauthorized, serverError } from '@/lib/utils/api';
 
 export async function GET(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session || session.role !== UserRole.ADMIN) {
-      return new NextResponse('Unauthorized', { status: 401 });
+      return unauthorized();
     }
 
     const totalUsers = await prisma.user.count();
@@ -35,6 +36,6 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error('[Admin Reports GET]', error);
-    return new NextResponse('Internal Server Error', { status: 500 });
+    return serverError();
   }
 }
