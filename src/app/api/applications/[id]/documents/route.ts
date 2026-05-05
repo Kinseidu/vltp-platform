@@ -5,6 +5,7 @@ import { getSession } from '@/lib/auth/jwt';
 import { ok, created, error, unauthorized, forbidden, notFound, withErrorHandler } from '@/lib/utils/api';
 import { audit } from '@/lib/services/audit.service';
 import { storeFile } from '@/lib/services/storage.service';
+import { getFileUrl, deleteFile } from '@/lib/services/storage.service';
 import { DocumentType, UserRole } from '@prisma/client';
 
 export const GET = withErrorHandler(async (req: NextRequest, { params }: { params: { id: string } }) => {
@@ -17,7 +18,13 @@ export const GET = withErrorHandler(async (req: NextRequest, { params }: { param
     orderBy: { uploadedAt: 'desc' },
   });
 
-  return ok({ documents });
+  // Attach secure URLs
+  const docsWithUrls = documents.map(doc => ({
+    ...doc,
+    url: getFileUrl(doc.storagePath),
+  }));
+
+  return ok({ documents: docsWithUrls });
 });
 
 export const POST = withErrorHandler(async (req: NextRequest, { params }: { params: { id: string } }) => {
@@ -26,17 +33,22 @@ export const POST = withErrorHandler(async (req: NextRequest, { params }: { para
 
   const appId = parseInt(params.id);
 
-  // Verify ownership
+  // Verify ownership and check deadline
   const profile = await prisma.applicantProfile.findUnique({ where: { userId: session.id } });
   if (!profile) return error('Profile not found', 404);
 
   const application = await prisma.application.findUnique({
     where: { id: appId },
-    include: { job: { include: { requiredDocTypes: true } } },
+    include: { job: true },
   });
 
   if (!application) return notFound('Application not found');
   if (application.applicantId !== profile.id) return forbidden();
+
+  // Deadline check
+  if (application.job.applicationDeadline && new Date() > new Date(application.job.applicationDeadline)) {
+    return error('The application deadline for this job has passed. No further documents can be uploaded.', 403);
+  }
 
   // Parse multipart form
   const formData = await req.formData();
@@ -80,5 +92,49 @@ export const POST = withErrorHandler(async (req: NextRequest, { params }: { para
     after: { applicationId: appId, docType, label: document.label } as any,
   });
 
-  return created({ document }, 'Document uploaded successfully');
+  return created({ document: { ...document, url: getFileUrl(document.storagePath) } }, 'Document uploaded successfully');
+});
+
+export const DELETE = withErrorHandler(async (req: NextRequest, { params }: { params: { id: string } }) => {
+  const session = await getSession();
+  if (!session || session.role !== UserRole.APPLICANT) return unauthorized();
+
+  const appId = parseInt(params.id);
+  const url = new URL(req.url);
+  const docId = parseInt(url.searchParams.get('docId') || '');
+
+  if (!docId) return error('Document ID required', 400);
+
+  const application = await prisma.application.findUnique({
+    where: { id: appId },
+    include: { 
+      job: true,
+      applicant: { select: { userId: true } }
+    },
+  });
+
+  if (!application) return notFound('Application not found');
+  if (application.applicant.userId !== session.id) return forbidden();
+
+  // Deadline check
+  if (application.job.applicationDeadline && new Date() > new Date(application.job.applicationDeadline)) {
+    return error('The application deadline for this job has passed. Documents cannot be removed.', 403);
+  }
+
+  const doc = await prisma.applicationDocument.findUnique({ where: { id: docId } });
+  if (!doc || doc.applicationId !== appId) return notFound('Document not found');
+
+  // Delete from storage and DB
+  await deleteFile(doc.storagePath);
+  await prisma.applicationDocument.delete({ where: { id: docId } });
+
+  await audit({
+    actorId: session.id,
+    action: 'DOCUMENT_DELETED',
+    entity: 'ApplicationDocument',
+    entityId: docId,
+    before: doc as any,
+  });
+
+  return ok(null, 'Document deleted successfully');
 });

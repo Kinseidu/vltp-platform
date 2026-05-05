@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { DashboardLayout, PageHeader, EmptyState } from '@/components/shared/DashboardLayout';
 import { StatusBadge } from '@/components/shared/StatusBadge';
-import { Plus, Briefcase, Users, Calendar, Search } from 'lucide-react';
+import { Plus, Briefcase, Users, Calendar, Search, Loader2, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function HRJobsPage() {
@@ -32,9 +32,29 @@ export default function HRJobsPage() {
 
   if (!user && !loading) { window.location.href = '/auth/login'; return null; }
 
-  const filtered = jobs.filter(j =>
-    !statusFilter || j.status === statusFilter
-  );
+  const [jobToDelete, setJobToDelete] = useState<any>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleDelete = async () => {
+    if (!jobToDelete) return;
+    setDeleting(true);
+    setError('');
+    try {
+      const res = await fetch(`/api/jobs/${jobToDelete.id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        setJobs(jobs.filter(j => j.id !== jobToDelete.id));
+        setJobToDelete(null);
+      } else {
+        setError(data.error || 'Failed to delete job');
+      }
+    } catch {
+      setError('Network error. Please try again.');
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   return (
     <DashboardLayout role={user?.role || 'HR_OFFICER'} userName={user?.email || ''} userEmail={user?.email || ''}>
@@ -43,28 +63,35 @@ export default function HRJobsPage() {
         subtitle={`${jobs.length} total jobs`}
         action={
           <Link href="/hr/jobs/new"
-            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors">
+            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors shadow-sm">
             <Plus size={16} /> Post New Job
           </Link>
         }
       />
 
+      {error && (
+        <div className="bg-red-50 text-red-700 text-sm px-4 py-3 rounded-lg border border-red-200 mb-6 flex justify-between items-center">
+          <span>{error}</span>
+          <button onClick={() => setError('')} className="font-bold">&times;</button>
+        </div>
+      )}
+
       {/* Filters */}
       <div className="flex gap-3 mb-6 flex-wrap">
-        <div className="relative flex-1 min-w-48">
+        <div className="relative flex-1 min-w-[300px]">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder="Search jobs..."
+            placeholder="Search by job title or description..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
           />
         </div>
         <select
           value={statusFilter}
           onChange={e => setStatusFilter(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white font-medium"
         >
           <option value="">All statuses</option>
           <option value="DRAFT">Draft</option>
@@ -75,8 +102,11 @@ export default function HRJobsPage() {
       </div>
 
       {loading ? (
-        <div className="text-center py-16 text-gray-400 text-sm">Loading jobs...</div>
-      ) : filtered.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-24 text-gray-400">
+          <Loader2 className="animate-spin mb-4" size={32} />
+          <p className="text-sm">Fetching job postings...</p>
+        </div>
+      ) : jobs.length === 0 ? (
         <EmptyState
           icon={<Briefcase size={24} />}
           title="No jobs found"
@@ -88,46 +118,99 @@ export default function HRJobsPage() {
           }
         />
       ) : (
-        <div className="space-y-3">
-          {filtered.map((job: any) => (
-            <Link key={job.id} href="/hr/jobs"
-              className="block bg-white rounded-xl border border-gray-200 p-5 hover:border-blue-300 hover:shadow-sm transition-all">
+        <div className="space-y-4">
+          {jobs.map((job: any) => (
+            <div key={job.id} className="bg-white rounded-xl border border-gray-200 p-5 hover:border-blue-300 hover:shadow-md transition-all group">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 mb-1">
-                    <h3 className="text-base font-semibold text-gray-900">{job.title}</h3>
+                    <h3 className="text-base font-bold text-gray-900 group-hover:text-blue-700 transition-colors">{job.title}</h3>
                     <StatusBadge status={job.status} size="sm" />
                   </div>
-                  <p className="text-sm text-gray-500 line-clamp-2 mb-3">{job.description}</p>
-                  <div className="flex items-center gap-4 text-xs text-gray-400 flex-wrap">
-                    <span className="flex items-center gap-1">
-                      <Users size={12} />
-                      {job._count?.applications || 0} application(s)
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Briefcase size={12} />
-                      Min {job.minExperience}yr experience
+                  <p className="text-sm text-gray-500 line-clamp-1 mb-4">{job.description}</p>
+                  
+                  <div className="flex items-center gap-6 text-xs text-gray-400 flex-wrap">
+                    <div className="flex items-center gap-2 bg-gray-50 px-2 py-1 rounded-md border border-gray-100">
+                      <Users size={14} className="text-gray-400" />
+                      <span className="font-bold text-gray-700">{job._count?.applications || 0}</span>
+                      <span className="text-gray-500">applicants</span>
+                    </div>
+                    <span className="flex items-center gap-1.5 font-medium">
+                      <Briefcase size={14} />
+                      Min {job.minExperience}yr exp.
                     </span>
                     {job.applicationDeadline && (
-                      <span className="flex items-center gap-1">
-                        <Calendar size={12} />
-                        Deadline: {format(new Date(job.applicationDeadline), 'dd MMM yyyy')}
+                      <span className="flex items-center gap-1.5 font-medium">
+                        <Calendar size={14} />
+                        Ends: {format(new Date(job.applicationDeadline), 'dd MMM yyyy')}
                       </span>
                     )}
-                    <span>
+                    <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
                       Communities: {job.eligibleCommunities?.map((ec: any) => ec.community.name).join(', ')}
                     </span>
                   </div>
                 </div>
-                <div className="flex-shrink-0 text-right">
-                  <div className="text-xs text-gray-400">{format(new Date(job.createdAt), 'dd MMM yyyy')}</div>
-                  <div className="text-xs text-blue-600 mt-1 font-medium">
-                    {job.requirements?.length || 0} skill req.
+
+                <div className="flex flex-col items-end gap-3">
+                  <div className="flex items-center gap-1">
+                    <Link 
+                      href={`/hr/jobs/${job.id}/edit`}
+                      className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                      title="Edit Job"
+                    >
+                      <Plus size={18} className="rotate-45" /> {/* Use Plus rotated for now or just text */}
+                      <span className="text-xs font-bold ml-1">Edit</span>
+                    </Link>
+                    <button 
+                      onClick={() => setJobToDelete(job)}
+                      className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                      title="Delete Job"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                  <div className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">
+                    Posted {format(new Date(job.createdAt), 'dd MMM yyyy')}
                   </div>
                 </div>
               </div>
-            </Link>
+            </div>
           ))}
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {jobToDelete && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-8 text-center">
+              <div className="w-16 h-16 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Trash2 size={32} />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Delete Job Posting?</h3>
+              <p className="text-sm text-gray-500 mb-8">
+                Are you sure you want to delete <strong>{jobToDelete.title}</strong>? 
+                This action cannot be undone. Jobs with existing applications cannot be deleted.
+              </p>
+              
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => setJobToDelete(null)}
+                  className="flex-1 px-4 py-3 border border-gray-200 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-bold shadow-md hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {deleting && <Loader2 size={16} className="animate-spin" />}
+                  {deleting ? 'Deleting...' : 'Confirm Delete'}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </DashboardLayout>

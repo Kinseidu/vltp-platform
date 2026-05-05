@@ -28,11 +28,11 @@ const navByRole: Record<string, NavItem[]> = {
     { href: '/youth-president', label: 'Dashboard', icon: <Home size={18} /> },
     { href: '/youth-president/verifications', label: 'Verification Queue', icon: <CheckCircle size={18} /> },
   ],
-  CHIEF_STAFF: [
-    { href: '/chief-staff', label: 'Dashboard', icon: <Home size={18} /> },
-    { href: '/chief-staff/confirmations', label: 'Pending Queue', icon: <CheckCircle size={18} /> },
-    { href: '/chief-staff/history', label: 'Decision History', icon: <Shield size={18} /> },
-  ],
+  // CHIEF_STAFF: [
+  //   { href: '/chief-staff', label: 'Dashboard', icon: <Home size={18} /> },
+  //   { href: '/chief-staff/confirmations', label: 'Pending Queue', icon: <CheckCircle size={18} /> },
+  //   { href: '/chief-staff/history', label: 'Decision History', icon: <Shield size={18} /> },
+  // ],
   HR_OFFICER: [
     { href: '/hr', label: 'Dashboard', icon: <Home size={18} /> },
     { href: '/hr/jobs', label: 'Job Postings', icon: <Briefcase size={18} /> },
@@ -43,7 +43,7 @@ const navByRole: Record<string, NavItem[]> = {
     { href: '/admin', label: 'Dashboard', icon: <Home size={18} /> },
     { href: '/admin/users', label: 'All Users', icon: <Users size={18} /> },
     { href: '/admin/roles', label: 'Roles & Permissions', icon: <Shield size={18} /> },
-    { href: '/admin/chief-confirmations', label: 'Chief Confirmations', icon: <CheckCircle size={18} /> },
+    // { href: '/admin/chief-confirmations', label: 'Chief Confirmations', icon: <CheckCircle size={18} /> },
     { href: '/admin/communities', label: 'Communities', icon: <Shield size={18} /> },
     { href: '/admin/youth-presidents', label: 'Youth Presidents', icon: <User size={18} /> },
     { href: '/admin/jobs', label: 'Job Oversight', icon: <Briefcase size={18} /> },

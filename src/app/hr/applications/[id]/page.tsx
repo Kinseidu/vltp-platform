@@ -222,14 +222,20 @@ export default function HRApplicationDetailPage() {
             {documents?.length === 0 && <p className="text-xs text-gray-400">No documents uploaded yet</p>}
             <div className="space-y-2">
               {documents?.map((doc: any) => (
-                <div key={doc.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
+                <a 
+                  key={doc.id} 
+                  href={doc.url} 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all group"
+                >
                   <FileText size={14} className="text-blue-500 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <div className="text-xs font-medium text-gray-900 truncate">{doc.label}</div>
                     <div className="text-xs text-gray-400">{doc.originalName}</div>
                   </div>
-                  <ExternalLink size={12} className="text-gray-400" />
-                </div>
+                  <ExternalLink size={12} className="text-gray-400 group-hover:text-blue-500 transition-colors" />
+                </a>
               ))}
             </div>
           </div>
