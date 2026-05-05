@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Plus, Save, Trash2 } from 'lucide-react';
 import { DashboardLayout, PageHeader } from '@/components/shared/DashboardLayout';
+import { AppSpinner } from '@/components/shared/AppSpinner';
 
 const PROFICIENCY_OPTIONS = ['BEGINNER', 'INTERMEDIATE', 'PROFICIENT', 'EXPERT'];
 
@@ -165,7 +166,14 @@ export default function ApplicantProfilePage() {
   };
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center text-sm text-gray-400">Loading profile...</div>;
+    return (
+      <DashboardLayout role="APPLICANT" userName="" userEmail="">
+        <div className="h-[70vh] flex flex-col items-center justify-center gap-3 text-gray-500">
+          <AppSpinner size="md" />
+          <p className="text-sm">Loading profile...</p>
+        </div>
+      </DashboardLayout>
+    );
   }
 
   if (!user || !profile) {

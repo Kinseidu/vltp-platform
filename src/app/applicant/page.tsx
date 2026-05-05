@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { DashboardLayout, PageHeader, StatCard } from '@/components/shared/DashboardLayout';
 import { StatusBadge } from '@/components/shared/StatusBadge';
+import { AppSpinner } from '@/components/shared/AppSpinner';
 import { CheckCircle, Briefcase, FileText, Bell, ArrowRight, AlertCircle } from 'lucide-react';
 
 export default function ApplicantDashboard() {
@@ -29,11 +30,16 @@ export default function ApplicantDashboard() {
     });
   }, []);
 
-  if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="text-gray-400 text-sm">Loading dashboard...</div>
-    </div>
-  );
+  if (loading) {
+    return (
+      <DashboardLayout role="APPLICANT" userName="" userEmail="">
+        <div className="h-[70vh] flex flex-col items-center justify-center gap-3 text-gray-500">
+          <AppSpinner size="md" />
+          <p className="text-sm">Loading dashboard...</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   if (!user) { window.location.href = '/auth/login'; return null; }
 

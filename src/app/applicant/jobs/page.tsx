@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Briefcase, Search } from 'lucide-react';
 import { DashboardLayout, EmptyState, PageHeader } from '@/components/shared/DashboardLayout';
 import { StatusBadge } from '@/components/shared/StatusBadge';
+import { AppSpinner } from '@/components/shared/AppSpinner';
 
 export default function ApplicantJobsPage() {
   const [user, setUser] = useState<any>(null);
@@ -24,7 +25,14 @@ export default function ApplicantJobsPage() {
   }, []);
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center text-sm text-gray-400">Loading jobs...</div>;
+    return (
+      <DashboardLayout role="APPLICANT" userName="" userEmail="">
+        <div className="h-[70vh] flex flex-col items-center justify-center gap-3 text-gray-500">
+          <AppSpinner size="md" />
+          <p className="text-sm">Loading jobs...</p>
+        </div>
+      </DashboardLayout>
+    );
   }
 
   if (!user) {

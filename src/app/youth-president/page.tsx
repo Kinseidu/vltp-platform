@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { DashboardLayout, PageHeader, StatCard, EmptyState } from '@/components/shared/DashboardLayout';
+import { AppSpinner } from '@/components/shared/AppSpinner';
 import { ArrowRight, CheckCircle2, Clock3, Users } from 'lucide-react';
 
 export default function YouthPresidentDashboardPage() {
@@ -26,7 +27,14 @@ export default function YouthPresidentDashboardPage() {
   }, []);
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center text-sm text-gray-400">Loading dashboard...</div>;
+    return (
+      <DashboardLayout role="YOUTH_PRESIDENT" userName="" userEmail="">
+        <div className="h-[70vh] flex flex-col items-center justify-center gap-3 text-gray-500">
+          <AppSpinner size="md" />
+          <p className="text-sm">Loading dashboard...</p>
+        </div>
+      </DashboardLayout>
+    );
   }
 
   if (!user) {

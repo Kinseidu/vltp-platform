@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { DashboardLayout, EmptyState, PageHeader } from '@/components/shared/DashboardLayout';
+import { AppSpinner } from '@/components/shared/AppSpinner';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { CheckCircle, ChevronDown, ChevronUp, Loader2, Shield, XCircle } from 'lucide-react';
 
@@ -60,7 +61,14 @@ export default function ChiefConfirmationsPage() {
   };
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center text-sm text-gray-400">Loading confirmations...</div>;
+    return (
+      <DashboardLayout role="CHIEF_STAFF" userName="" userEmail="">
+        <div className="h-[70vh] flex flex-col items-center justify-center gap-3 text-gray-500">
+          <AppSpinner size="md" />
+          <p className="text-sm">Loading confirmations...</p>
+        </div>
+      </DashboardLayout>
+    );
   }
 
   if (!user) {

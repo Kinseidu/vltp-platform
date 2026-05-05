@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { Sidebar } from './Sidebar';
+import { AppSpinner } from './AppSpinner';
 
 interface DashboardLayoutProps {
   role: string;
@@ -42,8 +43,8 @@ export function DashboardLayout({ role, userName, userEmail, children }: Dashboa
       />
       <main className={`flex-1 min-h-screen transition-all duration-200 ${collapsed ? 'ml-20' : 'ml-64'}`}>
         {isNavigating && (
-          <div className="fixed top-4 right-4 z-50 pointer-events-none">
-            <div className="w-5 h-5 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
+          <div className="fixed top-4 right-4 z-50 pointer-events-none bg-white/80 backdrop-blur-sm rounded-full p-1.5 border border-gray-200 shadow-sm">
+            <AppSpinner size="sm" />
           </div>
         )}
         <div className="max-w-6xl mx-auto px-6 py-8">

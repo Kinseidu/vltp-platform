@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ChevronLeft, FileText, ExternalLink } from 'lucide-react';
 import { DashboardLayout, EmptyState, PageHeader } from '@/components/shared/DashboardLayout';
 import { StatusBadge } from '@/components/shared/StatusBadge';
+import { AppSpinner } from '@/components/shared/AppSpinner';
 
 function buildFileToken(storagePath: string) {
   if (!storagePath) return '';
@@ -33,7 +34,14 @@ export default function ApplicantApplicationDetailPage() {
   const docs = useMemo(() => application?.documents || [], [application]);
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center text-sm text-gray-400">Loading application...</div>;
+    return (
+      <DashboardLayout role="APPLICANT" userName="" userEmail="">
+        <div className="h-[70vh] flex flex-col items-center justify-center gap-3 text-gray-500">
+          <AppSpinner size="md" />
+          <p className="text-sm">Loading application...</p>
+        </div>
+      </DashboardLayout>
+    );
   }
 
   if (!user) {

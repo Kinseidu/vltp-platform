@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Bell, CheckCheck } from 'lucide-react';
 import { DashboardLayout, EmptyState, PageHeader } from '@/components/shared/DashboardLayout';
+import { AppSpinner } from '@/components/shared/AppSpinner';
 
 export default function ApplicantNotificationsPage() {
   const [user, setUser] = useState<any>(null);
@@ -44,7 +45,14 @@ export default function ApplicantNotificationsPage() {
   };
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center text-sm text-gray-400">Loading notifications...</div>;
+    return (
+      <DashboardLayout role="APPLICANT" userName="" userEmail="">
+        <div className="h-[70vh] flex flex-col items-center justify-center gap-3 text-gray-500">
+          <AppSpinner size="md" />
+          <p className="text-sm">Loading notifications...</p>
+        </div>
+      </DashboardLayout>
+    );
   }
 
   if (!user) {

@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { DashboardLayout } from '@/components/shared/DashboardLayout';
 import { StatusBadge } from '@/components/shared/StatusBadge';
+import { AppSpinner } from '@/components/shared/AppSpinner';
 import { ChevronLeft, Upload, FileText, Loader2, CheckCircle, AlertCircle, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -83,7 +84,16 @@ export default function JobDetailPage() {
     setUploading(false);
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="text-sm text-gray-400">Loading job...</div></div>;
+  if (loading) {
+    return (
+      <DashboardLayout role="APPLICANT" userName="" userEmail="">
+        <div className="h-[70vh] flex flex-col items-center justify-center gap-3 text-gray-500">
+          <AppSpinner size="md" />
+          <p className="text-sm">Loading job...</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
   if (!job) return <div className="min-h-screen flex items-center justify-center"><div className="text-sm text-gray-400">Job not found.</div></div>;
 
   const isVerified = profile?.verificationStatus === 'VERIFIED';
