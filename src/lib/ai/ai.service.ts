@@ -8,6 +8,7 @@ import {
   GeneratedQuestion, GeneratedQuestionPack, EligibilityStatus
 } from '@/types';
 import { VerificationStatus, QuestionType } from '@prisma/client';
+import { readFile } from '../services/storage.service';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || '',
@@ -25,106 +26,133 @@ function parseJSONArrayFromText<T>(rawText: string): T[] {
 
   // First try direct parse.
   try {
-    return JSON.parse(cleaned) as T[];
-  } catch {
+    const parsed = JSON.parse(cleaned);
+    console.log(`[AI Pipeline] JSON parsed successfully. Array size: ${Array.isArray(parsed) ? parsed.length : 'N/A'}`);
+    return parsed as T[];
+  } catch (err) {
+    console.warn('[AI Pipeline] Direct JSON parse failed, attempting slice...');
     // Some models return extra prose before/after JSON.
     const start = cleaned.indexOf('[');
     const end = cleaned.lastIndexOf(']');
     if (start >= 0 && end > start) {
       const sliced = cleaned.slice(start, end + 1);
       try {
-        return JSON.parse(sliced) as T[];
+        const parsed = JSON.parse(sliced);
+        console.log(`[AI Pipeline] JSON slice parsed successfully. Array size: ${Array.isArray(parsed) ? parsed.length : 'N/A'}`);
+        return parsed as T[];
       } catch (e) {
-        console.error('[AI] JSON slice parse failed:', sliced);
+        console.error('[AI Pipeline] JSON slice parse failed:', sliced);
         throw new Error('AI response contained invalid JSON array');
       }
     }
-    console.error('[AI] Raw response was not JSON:', cleaned);
+    console.error('[AI Pipeline] Raw response was not JSON:', cleaned);
     throw new Error('AI response did not contain a valid JSON array');
   }
 }
 
-async function generateAIText(prompt: string, maxTokens: number): Promise<string> {
+export interface AIInputFile {
+  mimeType: string;
+  data: string; // base64
+}
+
+async function generateAIText(prompt: string, maxTokens: number, files?: AIInputFile[]): Promise<string> {
   const anthropicKey = process.env.ANTHROPIC_API_KEY || '';
   const geminiKey = process.env.GEMINI_API_KEY || '';
+  const MAX_RETRIES = 2;
+  const TIMEOUT_MS = 30000;
 
-  // Prefer Anthropic when configured.
-  if (anthropicKey && !anthropicKey.includes('replace-with-')) {
-    const response = await anthropic.messages.create({
-      model: AI_MODEL,
-      max_tokens: maxTokens,
-      messages: [{ role: 'user', content: prompt }],
-    });
+  let lastError: any;
 
-    return response.content
-      .filter(c => c.type === 'text')
-      .map(c => (c as { type: 'text'; text: string }).text)
-      .join('');
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+      // Prefer Anthropic when configured.
+      if (anthropicKey && !anthropicKey.includes('replace-with-')) {
+        const response = await anthropic.messages.create({
+          model: AI_MODEL,
+          max_tokens: maxTokens,
+          messages: [{ role: 'user', content: prompt }],
+        });
+        clearTimeout(timeoutId);
+        return response.content
+          .filter(c => c.type === 'text')
+          .map(c => (c as { type: 'text'; text: string }).text)
+          .join('');
+      }
+
+      // Fallback to Gemini
+      if (geminiKey && !geminiKey.includes('replace-with-')) {
+        const parts: any[] = [{ text: prompt }];
+        if (files) {
+          files.forEach(f => parts.push({ inline_data: { mime_type: f.mimeType, data: f.data } }));
+        }
+
+        const res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(geminiKey)}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts }],
+              generationConfig: {
+                maxOutputTokens: maxTokens,
+                temperature: 0.7,
+                responseMimeType: 'application/json',
+              },
+            }),
+            signal: controller.signal
+          }
+        );
+
+        clearTimeout(timeoutId);
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({ error: { message: 'Unknown error' } }));
+          throw new Error(`Gemini API error (${res.status}): ${errData.error?.message || 'Unknown error'}`);
+        }
+
+        const data = await res.json() as any;
+        const text = data.candidates?.[0]?.content?.parts?.map((p: any) => p.text || '').join('') || '';
+        
+        if (!text.trim()) throw new Error('AI returned an empty response');
+        return text;
+      }
+
+      throw new Error('No AI provider configured');
+
+    } catch (err: any) {
+      lastError = err;
+      if (err.name === 'AbortError') console.error('[AI Pipeline] Request timed out');
+      console.warn(`[AI Pipeline] Attempt ${attempt + 1} failed:`, err.message);
+      if (attempt < MAX_RETRIES) {
+        const delay = Math.pow(2, attempt) * 1000;
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
   }
 
-  // Fallback to Gemini when Anthropic key is unavailable.
-  if (geminiKey && !geminiKey.includes('replace-with-')) {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(geminiKey)}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            maxOutputTokens: maxTokens,
-            temperature: 0.7, // Slightly higher for more variety in questions
-            responseMimeType: 'application/json',
-          },
-        }),
-      }
-    );
-
-    if (!res.ok) {
-      const errData = await res.json().catch(() => ({ error: { message: 'Unknown error' } }));
-      throw new Error(`Gemini API error (${res.status}): ${errData.error?.message || 'Unknown error'}`);
-    }
-
-    const data = await res.json() as {
-      candidates?: Array<{
-        content?: { parts?: Array<{ text?: string }> };
-        finishReason?: string;
-      }>;
-    };
-
-    if (!data.candidates || data.candidates.length === 0) {
-      throw new Error('Gemini API returned no candidates. Safety filters may have blocked the response.');
-    }
-
-    const text = data.candidates[0].content?.parts?.map(p => p.text || '').join('') || '';
-    
-    if (!text.trim()) {
-      if (data.candidates[0].finishReason === 'SAFETY') {
-        throw new Error('Gemini API blocked the response due to safety filters.');
-      }
-      throw new Error('Gemini API returned an empty response');
-    }
-
-    return text;
-  }
-
-  throw new Error('No AI provider configured. Set ANTHROPIC_API_KEY or GEMINI_API_KEY.');
+  throw lastError;
 }
 
 // ─── HARD FILTER (Rule-based, no AI) ─────────────────────────────────────────
 
 interface HardFilterResult {
   passed: boolean;
-  eligibilityStatus: EligibilityStatus;
+  eligibilityStatus?: EligibilityStatus;
   reasons: string[];
 }
 
-function applyHardFilters(
-  app: ApplicationWithDetails,
-  job: JobWithDetails
-): HardFilterResult {
-  const reasons: string[] = [];
+function runHardFilters(job: JobWithDetails, app: ApplicationWithDetails): HardFilterResult {
   const profile = app.applicant;
+  const reasons: string[] = [];
+
+  console.log(`[AI Debug] runHardFilters for applicant: ${profile?.fullName || 'UNKNOWN'}`);
+  if (!profile) {
+    console.error('[AI Debug] Profile is missing for app:', app.id);
+    return { passed: false, eligibilityStatus: 'INELIGIBLE_NOT_VERIFIED', reasons: ['System error: Profile missing'] };
+  }
 
   // Filter 1: Must be a verified local
   if (profile.verificationStatus !== VerificationStatus.VERIFIED) {
@@ -175,11 +203,8 @@ function applyHardFilters(
 
 // ─── AI SHORTLISTING ──────────────────────────────────────────────────────────
 
-/**
- * Build the shortlisting prompt for Claude.
- * Gives Claude structured context and asks for JSON output.
- */
 function buildShortlistPrompt(job: JobWithDetails, applications: ApplicationWithDetails[]): string {
+  console.log(`[AI Debug] buildShortlistPrompt. Job: ${job?.title}, Apps: ${applications?.length}`);
   const jobContext = `
 JOB TITLE: ${job.title}
 JOB SCOPE: ${job.scope}
@@ -211,28 +236,36 @@ COVER NOTE: ${app.coverNote || 'None provided'}
 `;
   }).join('\n---\n');
 
-  return `You are an AI assistant helping an HR officer at a mining company shortlist applicants for a host-community recruitment programme.
-
-Your role is to ASSIST human decision-making, not replace it. Rank the following applicants based on job fit.
+  return `You are a Senior Technical Recruiter at a major mining company. Your task is to shortlist applicants for a host-community recruitment programme.
+  
+STRICT QUALITY GUIDELINES:
+1. BASE REASONING ONLY on the provided text summaries and the ATTACHED CV DOCUMENTS.
+2. DO NOT make assumptions. If a certificate is mentioned in text but not in documents, mark it as 'Not verified by upload'.
+3. BE SPECIFIC. Mention employer names, project titles, and specific technical skills (e.g., "Maintained CAT 797F haul trucks" instead of "Heavy equipment experience").
+4. DETECT INCONSISTENCIES. If a CV claim contradicts a skill entry, note it in the reasons.
 
 ${jobContext}
 
 ELIGIBLE APPLICANTS TO RANK:
 ${applicantsContext}
 
+THE CV/RESUMES FOR THESE APPLICANTS ARE ATTACHED.
+- Use them to verify specific dates and technical depth.
+- Cross-reference the "APPLICANT ID" in the text above with the content of the attached files.
+
 For each applicant, provide a JSON scoring with these exact fields:
-- applicationId: number (the APPLICANT ID shown above)
-- matchScore: number 0-100 (overall fit score)
+- applicationId: number (MATCH EXACTLY with the APPLICANT ID provided)
+- matchScore: number 0-100 (weighted: 40% skills, 40% experience, 20% certifications)
 - skillsMatchScore: number 0-100
 - experienceScore: number 0-100
-- certsScore: number 0-100 (based on documents uploaded)
+- certsScore: number 0-100 (reward verified document uploads)
 - roleRelevanceScore: number 0-100
-- reasons: string[] (3-5 bullet points explaining the score, referencing specific evidence)
-- missingRequirements: string[] (what would strengthen their application)
-- evidenceExtracted: object with key claims found in their profile/experience
+- reasons: string[] (3-5 bullet points. Start each with 'VERIFIED:' or 'CLAIMED:' or 'MISSING:')
+- missingRequirements: string[] (specific missing items relative to job requirements)
+- evidenceExtracted: object with key technical claims (e.g. {"drilling_exp": "5 years", "equipment": "Sandvik DX800"})
 
 Respond ONLY with a valid JSON array. No preamble. No markdown. Example:
-[{"applicationId":1,"matchScore":82,"skillsMatchScore":90,"experienceScore":75,"certsScore":70,"roleRelevanceScore":85,"reasons":["5 years underground mining directly matches scope","Has drilling experience at Asanko Gold Mine"],"missingRequirements":["Blasting certificate not uploaded"],"evidenceExtracted":{"drillingExp":"5 years at Asanko Gold Mine","safetyTraining":"Mentioned in work history"}}]`;
+[{"applicationId":1,"matchScore":82,"skillsMatchScore":90,"experienceScore":75,"certsScore":70,"roleRelevanceScore":85,"reasons":["VERIFIED: 5 years experience with underground drilling at Asanko Gold","CLAIMED: Safety supervision experience (no certificate uploaded)"],"missingRequirements":["Blasting certificate"],"evidenceExtracted":{"drilling_equipment":"Sandvik DX800","safety_role":"Shift lead at Asanko"}}]`;
 }
 
 /**
@@ -251,7 +284,7 @@ export async function generateShortlist(
   const ineligible: { app: ApplicationWithDetails; filterResult: HardFilterResult }[] = [];
 
   for (const app of applications) {
-    const filterResult = applyHardFilters(app, job);
+    const filterResult = runHardFilters(job, app);
     if (filterResult.passed) {
       eligible.push(app);
     } else {
@@ -282,7 +315,25 @@ export async function generateShortlist(
   // AI ranking for eligible applicants
   try {
     const prompt = buildShortlistPrompt(job, eligible);
-    const rawText = await generateAIText(prompt, 2000);
+    
+    // Read CV contents for eligible applicants to provide deeper context
+    const files: AIInputFile[] = [];
+    for (const app of eligible) {
+      const cv = app.documents.find(d => d.docType === 'CV_RESUME');
+      if (cv) {
+        try {
+          const buffer = await readFile(cv.storagePath);
+          files.push({
+            mimeType: cv.mimeType,
+            data: buffer.toString('base64')
+          });
+        } catch (err) {
+          console.error(`[AI] Failed to read CV for app ${app.id}:`, err);
+        }
+      }
+    }
+
+    const rawText = await generateAIText(prompt, 4000, files);
 
     const aiResults = parseJSONArrayFromText<{
       applicationId: number;
@@ -296,8 +347,15 @@ export async function generateShortlist(
       evidenceExtracted: Record<string, string>;
     }>(rawText);
 
+    // Validation layer
+    const validatedResults = aiResults.filter(r => {
+      const appExists = eligible.some(a => a.id === r.applicationId);
+      if (!appExists) console.warn(`[AI Pipeline] AI returned unknown applicationId: ${r.applicationId}`);
+      return appExists && typeof r.matchScore === 'number';
+    });
+
     // Merge AI results with applicant names
-    for (const aiResult of aiResults) {
+    for (const aiResult of validatedResults) {
       const app = eligible.find(a => a.id === aiResult.applicationId);
       if (!app) continue;
 
@@ -310,12 +368,12 @@ export async function generateShortlist(
         experienceScore: Math.round(aiResult.experienceScore),
         certsScore: Math.round(aiResult.certsScore),
         roleRelevanceScore: Math.round(aiResult.roleRelevanceScore),
-        reasons: aiResult.reasons,
-        missingRequirements: aiResult.missingRequirements,
-        evidenceExtracted: aiResult.evidenceExtracted,
+        reasons: aiResult.reasons || [],
+        missingRequirements: aiResult.missingRequirements || [],
+        evidenceExtracted: aiResult.evidenceExtracted || {},
       });
     }
-  } catch (err) {
+  } catch (err: any) {
     console.error('[AI] Shortlist generation failed:', err);
     // Fallback: return eligible with basic rule-based scores
     for (const app of eligible) {
@@ -370,35 +428,31 @@ DOCUMENTS: ${app.documents?.map(d => d.label).join(', ') || 'None uploaded'}
 COVER NOTE: ${app.coverNote || 'None'}
 `;
 
-  return `You are assisting an HR officer at a mining company to prepare interview questions for a host-community recruitment interview.
+  return `You are an Expert Technical Interviewer at a mining site. Prepare a set of 12 highly specific interview questions for the candidate below.
 
-The candidate will attend a PHYSICAL interview at the mine site. Your questions should help the interviewer:
-1. Verify the technical claims in the candidate's profile
-2. Assess safety consciousness (critical in mining)
-3. Explore scenario-based problem solving
-4. Understand real experience depth
+STRICT GUIDELINES:
+1. AVOID GENERIC QUESTIONS. (e.g., Do not ask "Tell me about yourself").
+2. USE THE ATTACHED DOCUMENTS. Read the candidate's CV/Resume and certificates to find specific details.
+3. MAP TO REQUIREMENTS. Every question must probe either a mandatory job requirement or a specific claim in the candidate's history.
+4. MINING FOCUS. Focus on technical competence, site safety, and scenario-based problem solving.
 
 ${jobContext}
 
 ${applicantContext}
 
+THE CANDIDATE'S DOCUMENTS ARE ATTACHED. 
+- Reference their specific past employers and projects in your questions.
+- If they claim a specific skill (e.g. "Blasting"), ask a question that verifies the DEPTH of that skill.
+
 Generate exactly 12 interview questions in this JSON format:
 [
   {
     "type": "TECHNICAL" | "EXPERIENTIAL" | "SAFETY_COMPLIANCE" | "SCENARIO_BASED",
-    "question": "The full question text",
-    "rubric": "What a strong answer would include (2-3 sentences)",
-    "mappedTo": "Which job requirement or applicant claim this question addresses"
+    "question": "The full question text (e.g., 'At your previous role at [Employer], you mentioned [Project]. How did you handle [Specific Challenge]?')",
+    "rubric": "What a high-quality answer would include (look for specific technical terms or safety protocols)",
+    "mappedTo": "Requirement ID or CV Claim being verified"
   }
 ]
-
-Guidelines:
-- 3 TECHNICAL questions: test knowledge of the role's technical requirements
-- 3 EXPERIENTIAL questions: verify specific claims in their work history
-- 3 SAFETY_COMPLIANCE questions: assess safety awareness (mandatory in mining)
-- 3 SCENARIO_BASED questions: present realistic on-site scenarios
-
-Reference the applicant's specific background where possible. If they claim X years at employer Y, ask them to describe a specific situation from that time.
 
 Respond ONLY with a valid JSON array. No preamble. No markdown fences.`;
 }
@@ -412,8 +466,24 @@ export async function generateInterviewQuestions(
 ): Promise<GeneratedQuestion[]> {
   const prompt = buildInterviewPrompt(job, application);
 
+  // Read actual document contents for AI analysis
+  const files: AIInputFile[] = [];
+  if (application.documents && application.documents.length > 0) {
+    for (const doc of application.documents) {
+      try {
+        const buffer = await readFile(doc.storagePath);
+        files.push({
+          mimeType: doc.mimeType,
+          data: buffer.toString('base64')
+        });
+      } catch (err) {
+        console.error(`[AI] Failed to read document ${doc.id}:`, err);
+      }
+    }
+  }
+
   try {
-    const rawText = await generateAIText(prompt, 2500);
+    const rawText = await generateAIText(prompt, 4000, files);
 
     const questions = parseJSONArrayFromText<GeneratedQuestion>(rawText);
     return questions;
