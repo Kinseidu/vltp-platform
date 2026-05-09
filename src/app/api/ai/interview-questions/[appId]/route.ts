@@ -3,7 +3,7 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db/prisma';
 import { getSession } from '@/lib/auth/jwt';
-import { unauthorized, notFound, serverError, ok, created, error as apiError, withErrorHandler } from '@/lib/utils/api';
+import { unauthorized, notFound, serverError, ok, created, error as apiError, forbidden, withErrorHandler } from '@/lib/utils/api';
 import { audit } from '@/lib/services/audit.service';
 import { generateInterviewQuestions } from '@/lib/ai/ai.service';
 import { QuestionType, UserRole } from '@prisma/client';

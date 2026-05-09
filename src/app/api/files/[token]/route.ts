@@ -56,7 +56,7 @@ export async function GET(req: NextRequest, { params }: { params: { token: strin
     const fileBuffer = await readFile(storagePath);
     
     // Serve the file inline
-    return new NextResponse(fileBuffer, {
+    return new NextResponse(new Uint8Array(fileBuffer), {
       headers: {
         'Content-Type': doc.mimeType,
         'Content-Disposition': `inline; filename="${doc.originalName}"`,

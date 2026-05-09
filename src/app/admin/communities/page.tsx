@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { DashboardLayout, PageHeader } from '@/components/shared/DashboardLayout';
-import { MapPin, Plus, UserPlus, Loader2, X } from 'lucide-react';
+import { MapPin, Plus, UserPlus, Loader2, X, Edit, Trash2, Save, Users } from 'lucide-react';
+import { useToast } from '@/components/shared/ToastProvider';
 
 export default function AdminCommunities() {
   const [communities, setCommunities] = useState<any[]>([]);
@@ -10,9 +11,14 @@ export default function AdminCommunities() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState<number | null>(null);
-  const [processing, setProcessing] = useState(false);
-  
+  const [editingCommunity, setEditingCommunity] = useState<any>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [processing, setProcessing] = useState<string | null>(null);
+
+  const toast = useToast();
+
   const [formData, setFormData] = useState({ name: '', region: '', description: '' });
+  const [editFormData, setEditFormData] = useState({ name: '', region: '', description: '', isActive: true });
   const [selectedYp, setSelectedYp] = useState<string>('');
 
   const fetchCommunities = async () => {
@@ -40,42 +46,133 @@ export default function AdminCommunities() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    setProcessing(true);
+    setProcessing('create');
     try {
       const res = await fetch('/api/admin/communities', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
-      if (res.ok) {
+      const data = await res.json();
+      if (data.success) {
         setShowModal(false);
         setFormData({ name: '', region: '', description: '' });
         fetchCommunities();
+        toast({
+          title: 'Success',
+          description: 'Community created successfully',
+          variant: 'success'
+        });
+      } else {
+        toast({ title: 'Error', description: data.error || 'Failed to create community', variant: 'error' });
       }
     } catch (e) {
       console.error(e);
+      toast({ title: 'Error', description: 'Network error occurred', variant: 'error' });
+    } finally {
+      setProcessing(null);
     }
-    setProcessing(false);
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingCommunity) return;
+
+    setProcessing('update');
+    try {
+      const res = await fetch(`/api/admin/communities/${editingCommunity.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editFormData),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setShowEditModal(false);
+        setEditingCommunity(null);
+        fetchCommunities();
+        toast({
+          title: 'Success',
+          description: 'Community updated successfully',
+          variant: 'success'
+        });
+      } else {
+        toast({ title: 'Error', description: data.error || 'Failed to update community', variant: 'error' });
+      }
+    } catch (e) {
+      console.error(e);
+      toast({ title: 'Error', description: 'Network error occurred', variant: 'error' });
+    } finally {
+      setProcessing(null);
+    }
+  };
+
+  const handleDelete = async (communityId: number) => {
+    if (!confirm('Are you sure you want to delete this community? This action cannot be undone.')) return;
+
+    setProcessing(`delete-${communityId}`);
+    try {
+      const res = await fetch(`/api/admin/communities/${communityId}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (data.success) {
+        fetchCommunities();
+        toast({
+          title: 'Success',
+          description: 'Community deleted successfully',
+          variant: 'success'
+        });
+      } else {
+        toast({ title: 'Error', description: data.error || 'Failed to delete community', variant: 'error' });
+      }
+    } catch (e) {
+      console.error(e);
+      toast({ title: 'Error', description: 'Network error occurred', variant: 'error' });
+    } finally {
+      setProcessing(null);
+    }
   };
 
   const handleAssignYP = async () => {
     if (showAssignModal === null) return;
-    setProcessing(true);
+    setProcessing('assign');
     try {
       const res = await fetch(`/api/admin/communities/${showAssignModal}/youth-president`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ youthPresidentId: selectedYp || null }),
       });
-      if (res.ok) {
+      const data = await res.json();
+      if (data.success) {
         setShowAssignModal(null);
         setSelectedYp('');
         fetchCommunities();
+        const count = data.data.pendingApplicantsCount || 0;
+        toast({
+          title: 'Assignment Updated',
+          description: `Youth President assigned successfully. ${count} pending applicant${count !== 1 ? 's' : ''} now in queue for review.`,
+          variant: 'success'
+        });
+      } else {
+        toast({ title: 'Error', description: data.error || 'Failed to assign youth president', variant: 'error' });
       }
     } catch (e) {
       console.error(e);
+      toast({ title: 'Error', description: 'Network error occurred', variant: 'error' });
+    } finally {
+      setProcessing(null);
     }
-    setProcessing(false);
+  };
+
+  const openEditModal = (community: any) => {
+    setEditingCommunity(community);
+    setEditFormData({
+      name: community.name,
+      region: community.region,
+      description: community.description || '',
+      isActive: community.isActive,
+    });
+    setShowEditModal(true);
   };
 
   return (
@@ -147,9 +244,27 @@ export default function AdminCommunities() {
                     )}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <span className="text-xs text-gray-400">
-                      {c._count?.applicantProfiles || 0} applicants
-                    </span>
+                    <div className="flex items-center justify-end gap-2">
+                      <span className="text-xs text-gray-400 mr-4">
+                        {c._count?.applicantProfiles || 0} applicants
+                      </span>
+                      <button
+                        onClick={() => openEditModal(c)}
+                        disabled={processing === `edit-${c.id}`}
+                        className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors disabled:opacity-50"
+                        title="Edit community"
+                      >
+                        <Edit size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(c.id)}
+                        disabled={processing === `delete-${c.id}`}
+                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
+                        title="Delete community"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -181,7 +296,7 @@ export default function AdminCommunities() {
               </div>
               <div className="pt-4 flex justify-end gap-3">
                 <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg border">Cancel</button>
-                <button type="submit" disabled={processing} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg flex items-center gap-2">
+<button type="submit" disabled={!!processing} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg flex items-center gap-2">
                   {processing && <Loader2 size={14} className="animate-spin" />}
                   Save Community
                 </button>
@@ -222,7 +337,7 @@ export default function AdminCommunities() {
                 <button type="button" onClick={() => setShowAssignModal(null)} className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg border">Cancel</button>
                 <button 
                   onClick={handleAssignYP} 
-                  disabled={processing}
+                  disabled={!!processing}
                   className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg flex items-center gap-2"
                 >
                   {processing && <Loader2 size={14} className="animate-spin" />}
@@ -230,6 +345,78 @@ export default function AdminCommunities() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Community Modal */}
+      {showEditModal && editingCommunity && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+              <h3 className="font-bold text-lg text-gray-900">Edit Community</h3>
+              <button onClick={() => setShowEditModal(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+            </div>
+            <form onSubmit={handleUpdate} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Community Name</label>
+                <input
+                  required
+                  type="text"
+                  value={editFormData.name}
+                  onChange={e => setEditFormData({...editFormData, name: e.target.value})}
+                  className="w-full border-gray-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 border"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Region / District</label>
+                <input
+                  required
+                  type="text"
+                  value={editFormData.region}
+                  onChange={e => setEditFormData({...editFormData, region: e.target.value})}
+                  className="w-full border-gray-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 border"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description (Optional)</label>
+                <textarea
+                  rows={3}
+                  value={editFormData.description}
+                  onChange={e => setEditFormData({...editFormData, description: e.target.value})}
+                  className="w-full border-gray-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 border"
+                />
+              </div>
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="isActive"
+                  checked={editFormData.isActive}
+                  onChange={e => setEditFormData({...editFormData, isActive: e.target.checked})}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor="isActive" className="ml-2 block text-sm text-gray-900">
+                  Active
+                </label>
+              </div>
+              <div className="pt-4 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg border"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={!!processing}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg flex items-center gap-2"
+                >
+                  {processing && <Loader2 size={14} className="animate-spin" />}
+                  Save Changes
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

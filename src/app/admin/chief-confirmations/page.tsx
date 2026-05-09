@@ -27,7 +27,8 @@ export default function AdminChiefConfirmations() {
         <div className="p-4 border-b border-gray-100 bg-gray-50 flex flex-col sm:flex-row gap-4 items-center justify-between">
           <div className="relative w-full sm:w-72">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-            <input type="text" placeholder="Search applicant or chief..." className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
+            <label className="sr-only" htmlFor="chief-confirmations-search">Search applicant or chief</label>
+            <input id="chief-confirmations-search" type="text" placeholder="Search applicant or chief..." className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
           <button className="flex items-center gap-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg px-4 py-2 hover:bg-gray-50">
             <Filter size={16} /> Filter

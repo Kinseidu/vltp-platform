@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db/prisma';
 import { getSession } from '@/lib/auth/jwt';
-import { UserRole } from '@prisma/client';
+import { UserRole, VerificationStatus } from '@prisma/client';
 import { audit } from '@/lib/services/audit.service';
 import { unauthorized, serverError, error as apiError } from '@/lib/utils/api';
 
@@ -29,20 +29,42 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       }
     }
 
-    const community = await prisma.community.update({
+    const updatedCommunity = await prisma.community.update({
       where: { id: communityId },
       data: { youthPresidentId: youthPresidentId || null },
+      select: { 
+        id: true, 
+        name: true, 
+        youthPresidentId: true 
+      } // Select name to return for toast message
+    });
+
+    // Count pending verification requests for the updated community
+    const pendingApplicantsCount = await prisma.verificationRequest.count({
+      where: {
+        applicant: {
+          communityId: updatedCommunity.id,
+        },
+        status: VerificationStatus.PENDING, // Only count pending requests
+        youthVerification: null, // Only count requests not yet reviewed by a Youth President
+      },
     });
 
     await audit({
       actorId: session.id,
-      action: 'COMMUNITY_YP_ASSIGNED',
+      action: 'COMMUNITY_UPDATED',
       entity: 'Community',
       entityId: communityId,
       after: { youthPresidentId },
     });
 
-    return NextResponse.json({ success: true, data: { community } });
+    return NextResponse.json({ 
+      success: true, 
+      data: { 
+        community: updatedCommunity, 
+        pendingApplicantsCount 
+      }
+    });
   } catch (error) {
     console.error('[Admin Community YP PUT]', error);
     return serverError();

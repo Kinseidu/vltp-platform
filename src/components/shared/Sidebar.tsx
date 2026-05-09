@@ -127,7 +127,8 @@ export function Sidebar({ role, userName, userEmail, collapsed, onToggle, onNavi
               onClick={() => {
                 if (pathname !== item.href) onNavigate();
               }}
-              title={collapsed ? item.label : undefined}
+              title={item.label}
+              aria-label={item.label}
               className={cn(
                 'flex items-center rounded-lg text-sm font-medium transition-colors',
                 collapsed ? 'justify-center px-2 py-2.5' : 'gap-3 px-3 py-2.5',

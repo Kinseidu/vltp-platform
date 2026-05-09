@@ -7,6 +7,7 @@ import { createToken, setSessionCookie } from '@/lib/auth/jwt';
 import { ok, created, error, withErrorHandler } from '@/lib/utils/api';
 import { audit } from '@/lib/services/audit.service';
 import { UserRole } from '@prisma/client';
+import { checkRateLimit, createRateLimitKey, getClientIp, AUTH_RATE_LIMIT } from '@/lib/utils/rate-limit';
 
 const RegisterSchema = z.object({
   fullName: z.string().min(2).max(100),
@@ -17,6 +18,22 @@ const RegisterSchema = z.object({
 });
 
 export const POST = withErrorHandler(async (req: NextRequest) => {
+  // Rate limit: 3 attempts per minute per IP
+  const clientIp = getClientIp(req.ip, Object.fromEntries(req.headers));
+  const rateLimitKey = createRateLimitKey(clientIp, '/api/auth/register');
+  const { allowed, remaining, resetAt } = checkRateLimit(rateLimitKey, AUTH_RATE_LIMIT);
+
+  if (!allowed) {
+    return error(
+      `Too many registration attempts. Please try again in ${Math.ceil((resetAt - Date.now()) / 1000)} seconds`,
+      429,
+      {
+        retryAfter: [Math.ceil((resetAt - Date.now()) / 1000).toString()],
+        remaining: [remaining.toString()],
+      }
+    );
+  }
+
   const body = RegisterSchema.parse(await req.json());
 
   // Check email uniqueness

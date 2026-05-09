@@ -24,7 +24,11 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
     where: {
       status: status as any || undefined,
       applicant: { communityId: community.id },
-      youthVerification: { is: null }, // Only unreviewed requests
+      // Only unreviewed requests for this community queue.
+      // If a Youth President is reassigned, these pending verification requests
+      // must automatically appear in the new Youth President's queue.
+      youthVerification: { is: null },
+
     },
     include: {
       applicant: {

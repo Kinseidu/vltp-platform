@@ -3,7 +3,7 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db/prisma';
 import { getSession } from '@/lib/auth/jwt';
-import { ok, forbidden, notFound, withErrorHandler } from '@/lib/utils/api';
+import { ok, forbidden, notFound, error, withErrorHandler } from '@/lib/utils/api';
 import { audit } from '@/lib/services/audit.service';
 import { runJobMatchingAndNotify } from '@/lib/services/matching.service';
 import { JobStatus, UserRole } from '@prisma/client';

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { DashboardLayout, PageHeader } from '@/components/shared/DashboardLayout';
+import { useToast } from '@/components/shared/ToastProvider';
 import { User, MapPin } from 'lucide-react';
 
 export default function AdminYouthPresidents() {
@@ -27,6 +28,8 @@ export default function AdminYouthPresidents() {
     fetchData();
   }, []);
 
+  const toast = useToast();
+
   const handleAssign = async (communityId: string, youthPresidentId: string) => {
     try {
       const res = await fetch(`/api/admin/communities/${communityId}/youth-president`, {
@@ -35,15 +38,15 @@ export default function AdminYouthPresidents() {
         body: JSON.stringify({ youthPresidentId: youthPresidentId || null }),
       });
       if (res.ok) {
-        alert('Assignment updated successfully');
+        toast({ title: 'Assignment updated', description: 'Youth President queue refreshed for all pending applicants in this community.', variant: 'success' });
         fetchData(); // refresh
       } else {
         const text = await res.text();
-        alert(`Error: ${text}`);
+        toast({ title: 'Update failed', description: text || 'Unable to update assignment.', variant: 'error' });
       }
     } catch (e) {
       console.error(e);
-      alert('Network error');
+      toast({ title: 'Network error', description: 'Unable to update assignment right now.', variant: 'error' });
     }
   };
 

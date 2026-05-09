@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Sidebar } from './Sidebar';
 import { AppSpinner } from './AppSpinner';
 
+
 interface DashboardLayoutProps {
   role: string;
   userName: string;
@@ -16,16 +17,20 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ role, userName, userEmail, children }: DashboardLayoutProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
 
   useEffect(() => {
-    const stored = window.localStorage.getItem('sidebar_collapsed');
-    if (stored === '1') setCollapsed(true);
+    const saved = window.localStorage.getItem('sidebar_collapsed') === '1';
+    setCollapsed(saved);
+    setMounted(true);
   }, []);
 
   useEffect(() => {
-    window.localStorage.setItem('sidebar_collapsed', collapsed ? '1' : '0');
-  }, [collapsed]);
+    if (mounted) {
+      window.localStorage.setItem('sidebar_collapsed', collapsed ? '1' : '0');
+    }
+  }, [collapsed, mounted]);
 
   useEffect(() => {
     setIsNavigating(false);
@@ -41,17 +46,19 @@ export function DashboardLayout({ role, userName, userEmail, children }: Dashboa
         onToggle={() => setCollapsed(prev => !prev)}
         onNavigate={() => setIsNavigating(true)}
       />
-      <main className={`flex-1 min-h-screen transition-all duration-200 ${collapsed ? 'ml-20' : 'ml-64'}`}>
-        {isNavigating && (
-          <div className="fixed top-4 right-4 z-50 pointer-events-none bg-white/80 backdrop-blur-sm rounded-full p-1.5 border border-gray-200 shadow-sm">
-            <AppSpinner size="sm" />
+        <main
+          className={`flex-1 min-h-screen ${isNavigating ? 'transition-none' : 'transition-all duration-200'} ${collapsed ? 'ml-20' : 'ml-64'}`}
+        >
+          {isNavigating && (
+            <div className="fixed top-4 right-4 z-50 pointer-events-none bg-white/80 backdrop-blur-sm rounded-full p-1.5 border border-gray-200 shadow-sm">
+              <AppSpinner size="sm" />
+            </div>
+          )}
+          <div className="max-w-6xl mx-auto px-6 py-8">
+            {children}
           </div>
-        )}
-        <div className="max-w-6xl mx-auto px-6 py-8">
-          {children}
-        </div>
-      </main>
-    </div>
+        </main>
+      </div>
   );
 }
 

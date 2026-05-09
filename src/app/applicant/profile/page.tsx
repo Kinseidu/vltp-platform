@@ -205,12 +205,30 @@ export default function ApplicantProfilePage() {
           <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
             <h3 className="text-base font-semibold text-gray-900">Basic information</h3>
             <div className="grid md:grid-cols-2 gap-3">
-              <input value={profileForm.fullName} onChange={e => setProfileForm(prev => ({ ...prev, fullName: e.target.value }))} placeholder="Full name" className="px-3 py-2 border border-gray-300 rounded-lg text-sm" />
-              <input value={profileForm.phone} onChange={e => setProfileForm(prev => ({ ...prev, phone: e.target.value }))} placeholder="Phone" className="px-3 py-2 border border-gray-300 rounded-lg text-sm" />
-              <input type="date" value={profileForm.dateOfBirth} onChange={e => setProfileForm(prev => ({ ...prev, dateOfBirth: e.target.value }))} className="px-3 py-2 border border-gray-300 rounded-lg text-sm" />
-              <input value={profileForm.gender} onChange={e => setProfileForm(prev => ({ ...prev, gender: e.target.value }))} placeholder="Gender" className="px-3 py-2 border border-gray-300 rounded-lg text-sm" />
-              <input value={profileForm.highestEducation} onChange={e => setProfileForm(prev => ({ ...prev, highestEducation: e.target.value }))} placeholder="Highest education" className="px-3 py-2 border border-gray-300 rounded-lg text-sm md:col-span-2" />
-              <textarea value={profileForm.bio} onChange={e => setProfileForm(prev => ({ ...prev, bio: e.target.value }))} placeholder="Short bio" rows={3} className="px-3 py-2 border border-gray-300 rounded-lg text-sm md:col-span-2 resize-none" />
+              <div>
+                <label htmlFor="profile-full-name" className="block text-xs font-medium text-gray-700 mb-1">Full name</label>
+                <input id="profile-full-name" value={profileForm.fullName} onChange={e => setProfileForm(prev => ({ ...prev, fullName: e.target.value }))} placeholder="e.g. Kwame Asante" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+              </div>
+              <div>
+                <label htmlFor="profile-phone" className="block text-xs font-medium text-gray-700 mb-1">Phone number</label>
+                <input id="profile-phone" value={profileForm.phone} onChange={e => setProfileForm(prev => ({ ...prev, phone: e.target.value }))} placeholder="+233 24 000 0000" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+              </div>
+              <div>
+                <label htmlFor="profile-dob" className="block text-xs font-medium text-gray-700 mb-1">Date of birth</label>
+                <input id="profile-dob" type="date" value={profileForm.dateOfBirth} onChange={e => setProfileForm(prev => ({ ...prev, dateOfBirth: e.target.value }))} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+              </div>
+              <div>
+                <label htmlFor="profile-gender" className="block text-xs font-medium text-gray-700 mb-1">Gender</label>
+                <input id="profile-gender" value={profileForm.gender} onChange={e => setProfileForm(prev => ({ ...prev, gender: e.target.value }))} placeholder="Male, Female, Other" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+              </div>
+              <div className="md:col-span-2">
+                <label htmlFor="profile-highest-education" className="block text-xs font-medium text-gray-700 mb-1">Highest education</label>
+                <input id="profile-highest-education" value={profileForm.highestEducation} onChange={e => setProfileForm(prev => ({ ...prev, highestEducation: e.target.value }))} placeholder="e.g. Diploma in Mining Technology" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+              </div>
+              <div className="md:col-span-2">
+                <label htmlFor="profile-bio" className="block text-xs font-medium text-gray-700 mb-1">Short bio</label>
+                <textarea id="profile-bio" value={profileForm.bio} onChange={e => setProfileForm(prev => ({ ...prev, bio: e.target.value }))} placeholder="Tell us about your experience and strengths" rows={3} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none" />
+              </div>
             </div>
           </div>
 

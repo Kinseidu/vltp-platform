@@ -6,6 +6,7 @@ import { unauthorized, notFound, serverError, ok, created, error as apiError, wi
 import { audit } from '@/lib/services/audit.service';
 import { generateShortlist } from '@/lib/ai/ai.service';
 import { UserRole } from '@prisma/client';
+import { checkRateLimit, createRateLimitKey, getClientIp, AI_RATE_LIMIT } from '@/lib/utils/rate-limit';
 
 // GET: Fetch existing shortlist for a job
 export const GET = withErrorHandler(async (req: NextRequest, { params }: { params: { jobId: string } }) => {
@@ -42,6 +43,17 @@ export const POST = withErrorHandler(async (req: NextRequest, { params }: { para
   const session = await getSession();
   if (!session || (session.role !== UserRole.HR_OFFICER && session.role !== UserRole.ADMIN)) {
     return unauthorized();
+  }
+
+  // Rate limit: 5 AI requests per minute per user
+  const rateLimitKey = createRateLimitKey(session.id, '/api/ai/shortlist');
+  const { allowed, remaining, resetAt } = checkRateLimit(rateLimitKey, AI_RATE_LIMIT);
+
+  if (!allowed) {
+    return apiError(
+      `AI shortlist limit exceeded. Please try again in ${Math.ceil((resetAt - Date.now()) / 1000)} seconds`,
+      429
+    );
   }
 
   const jobId = parseInt(params.jobId);

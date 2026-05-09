@@ -27,7 +27,8 @@ export default function AdminAuditLogs() {
         <div className="p-4 border-b border-gray-100 bg-gray-50 flex gap-4">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-            <input type="text" placeholder="Search actor, action, or entity ID..." className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
+            <label className="sr-only" htmlFor="admin-auditlogs-search">Search actor, action, or entity ID</label>
+            <input id="admin-auditlogs-search" type="text" placeholder="Search actor, action, or entity ID..." className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
           <button className="flex items-center gap-2 px-3 py-2 text-sm font-medium border border-gray-300 rounded-lg hover:bg-gray-50">
             <Calendar size={16} /> Last 30 Days

@@ -15,26 +15,15 @@ const sizeClasses = {
 };
 
 export function AppSpinner({ size = 'md', className }: AppSpinnerProps) {
-  const [useFallback, setUseFallback] = useState(false);
-
-  if (useFallback) {
-    return (
-      <div
-        className={cn(
-          sizeClasses[size],
-          'border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin',
-          className
-        )}
-      />
-    );
-  }
-
   return (
-    <img
-      src="/api/assets/pickaxe-spinner"
-      alt="Loading"
-      className={cn(sizeClasses[size], 'animate-spin', className)}
-      onError={() => setUseFallback(true)}
+    <div
+      className={cn(
+        sizeClasses[size],
+        'rounded-full border-2 border-gray-200 border-t-blue-500 animate-spin',
+        className
+      )}
+      role="status"
+      aria-label="Loading"
     />
   );
 }

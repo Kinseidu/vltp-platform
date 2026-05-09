@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { DashboardLayout, PageHeader } from '@/components/shared/DashboardLayout';
+import { useToast } from '@/components/shared/ToastProvider';
 import { Save, Settings as SettingsIcon } from 'lucide-react';
 
 export default function AdminSettings() {
@@ -28,6 +29,8 @@ export default function AdminSettings() {
     });
   }, []);
 
+  const toast = useToast();
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -38,11 +41,13 @@ export default function AdminSettings() {
         body: JSON.stringify({ settings }),
       });
       if (res.ok) {
-        alert('Settings saved successfully.');
+        toast({ title: 'Settings saved', description: 'Your configuration updates are now active.', variant: 'success' });
+      } else {
+        toast({ title: 'Save failed', description: 'Unable to store settings. Please retry.', variant: 'error' });
       }
     } catch (e) {
       console.error(e);
-      alert('Error saving settings.');
+      toast({ title: 'Network error', description: 'Unable to save settings right now.', variant: 'error' });
     }
     setSaving(false);
   };

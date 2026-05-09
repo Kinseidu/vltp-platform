@@ -176,7 +176,7 @@ export default function VerificationPage() {
           {!request && status !== 'VERIFIED' && (
             <button
               onClick={requestVerification}
-              disabled={submitting || !profile?.skills?.length || !profile?.workExperiences?.length}
+              disabled={submitting || !profile?.skills?.length || !profile?.workExperiences?.length || !profile?.communityId}
               className="w-full inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-xl text-sm transition-colors disabled:opacity-50"
             >
               {submitting && <Loader2 size={15} className="animate-spin" />}

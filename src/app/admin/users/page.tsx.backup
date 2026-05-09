@@ -329,6 +329,162 @@ export default function AdminUsers() {
       {showEditModal && editingUser && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Edit User: {editingUser.email}</h3>
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="editFullName" className="block text-sm font-medium text-gray-700">Full Name</label>
+                  <input
+                    type="text"
+                    id="editFullName"
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    value={editingUser.applicantProfile?.fullName || ''}
+                    onChange={(e) => setEditingUser({ ...editingUser, applicantProfile: { ...editingUser.applicantProfile, fullName: e.target.value } })}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="editEmail" className="block text-sm font-medium text-gray-700">Email</label>
+                  <input
+                    type="email"
+                    id="editEmail"
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    value={editingUser.email}
+                    onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="editPhone" className="block text-sm font-medium text-gray-700">Phone</label>
+                  <input
+                    type="text"
+                    id="editPhone"
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    value={editingUser.phone || ''}
+                    onChange={(e) => setEditingUser({ ...editingUser, phone: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="editRole" className="block text-sm font-medium text-gray-700">Role</label>
+                  <select
+                    id="editRole"
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    value={editingUser.role}
+                    onChange={(e) => setEditingUser({ ...editingUser, role: e.target.value })}
+                  >
+                    <option value={UserRole.APPLICANT}>Applicant</option>
+                    <option value={UserRole.YOUTH_PRESIDENT}>Youth President</option>
+                    <option value={UserRole.HR_OFFICER}>HR Officer</option>
+                    <option value={UserRole.CHIEF_STAFF}>Chief Staff</option>
+                    <option value={UserRole.ADMIN}>Admin</option>
+                  </select>
+                </div>
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="editIsActive"
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    checked={editingUser.isActive}
+                    onChange={(e) => setEditingUser({ ...editingUser, isActive: e.target.checked })}
+                  />
+                  <label htmlFor="editIsActive" className="ml-2 block text-sm text-gray-900">
+                    Active
+                  </label>
+                </div>
+              </div>
+              <div className="flex justify-end space-x-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setEditingUser(null);
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={processing === editingUser.id}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors disabled:opacity-50 flex items-center"
+                >
+                  {processing === editingUser.id && <Loader2 size={14} className="animate-spin mr-2" />}
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Password Reset Modal */}
+      {showPasswordResetModal && resettingUser && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Reset Password: {resettingUser.email}</h3>
+              <form onSubmit={handlePasswordReset} className="space-y-4">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-800">
+                  <strong>Warning:</strong> This will immediately change the password for <strong>{resettingUser.email}</strong>.
+                  Make sure the user knows their new password.
+                </div>
+                <div>
+                  <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">New Password</label>
+                  <input
+                    type="password"
+                    id="newPassword"
+                    required
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Enter new password..."
+                  />
+                </div>
+                <div>
+                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">Confirm New Password</label>
+                  <input
+                    type="password"
+                    id="confirmPassword"
+                    required
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Confirm new password..."
+                  />
+                </div>
+                {passwordError && (
+                  <div className="text-red-600 text-sm">{passwordError}</div>
+                )}
+                <div className="flex justify-end space-x-3 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowPasswordResetModal(false);
+                      setResettingUser(null);
+                      setNewPassword('');
+                      setConfirmPassword('');
+                      setPasswordError('');
+                    }}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={processing === resettingUser.id || !newPassword || !confirmPassword}
+                    className="px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-md transition-colors disabled:opacity-50 flex items-center"
+                  >
+                    {processing === resettingUser.id && <Loader2 size={14} className="animate-spin mr-2" />}
+                    Reset Password
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+    </DashboardLayout>
+  );
+}
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
             <form onSubmit={(e) => {
               e.preventDefault();
               updateUser({
@@ -493,3 +649,31 @@ export default function AdminUsers() {
     </DashboardLayout>
   );
 }
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="editFullName" className="block text-sm font-medium text-gray-700">Full Name</label>
+                  <input
+                    type="text"
+                    id="editFullName"
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    value={editingUser.applicantProfile?.fullName || ''}
+                    onChange={(e) => setEditingUser({ ...editingUser, applicantProfile: { ...editingUser.applicantProfile, fullName: e.target.value } })}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="editEmail" className="block text-sm font-medium text-gray-700">Email</label>
+                  <input
+                    type="email"
+                    id="editEmail"
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    value={editingUser.email}
+                    onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="editPhone" className="block text-sm font-medium text-gray-700">Phone</label>
+                  <input
+                    type="text"
+                    id="editPhone"
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outli
+(Content truncated due to size limit. Use line ranges to read remaining content)

@@ -1,10 +1,10 @@
-// src/app/youth-president/verifications/page.tsx
+
 'use client';
 
 import { useEffect, useState } from 'react';
 import { DashboardLayout, PageHeader, EmptyState } from '@/components/shared/DashboardLayout';
 import { StatusBadge } from '@/components/shared/StatusBadge';
-import { CheckCircle, XCircle, ChevronDown, ChevronUp, User, Briefcase, Loader2 } from 'lucide-react';
+import { CheckCircle, XCircle, ChevronDown, ChevronUp, User, Briefcase, Loader2, RefreshCw } from 'lucide-react';
 
 export default function YouthVerificationsPage() {
   const [user, setUser] = useState<any>(null);
@@ -12,6 +12,7 @@ export default function YouthVerificationsPage() {
   const [community, setCommunity] = useState<any>(null);
   const [expanded, setExpanded] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [processing, setProcessing] = useState<number | null>(null);
   const [noteInput, setNoteInput] = useState<Record<number, string>>({});
 
@@ -28,6 +29,12 @@ export default function YouthVerificationsPage() {
       setCommunity(data.data.community);
     }
     setLoading(false);
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchRequests();
+    setRefreshing(false);
   };
 
   const handleDecision = async (requestId: number, decision: 'APPROVE' | 'REJECT') => {
@@ -49,6 +56,16 @@ export default function YouthVerificationsPage() {
       <PageHeader
         title="Verification Queue"
         subtitle={community ? `Community: ${community.name} · ${requests.length} pending` : 'Loading...'}
+        action={
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+          >
+            <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
+            {refreshing ? 'Refreshing...' : 'Refresh Queue'}
+          </button>
+        }
       />
 
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 text-sm text-blue-800">

@@ -1,8 +1,8 @@
 // src/lib/ai/ai.service.ts
-// AI service abstraction using Claude API (Anthropic)
+// AI service abstraction using Google Gemini API
 // All prompts, response parsing, and error handling are centralised here
+// Primary provider: Google Gemini 2.5-flash
 
-import Anthropic from '@anthropic-ai/sdk';
 import {
   JobWithDetails, ApplicationWithDetails, ShortlistCandidateResult,
   GeneratedQuestion, GeneratedQuestionPack, EligibilityStatus
@@ -10,12 +10,8 @@ import {
 import { VerificationStatus, QuestionType } from '@prisma/client';
 import { readFile } from '../services/storage.service';
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || '',
-});
-
-const AI_MODEL = 'claude-sonnet-4-20250514';
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 
 function parseJSONArrayFromText<T>(rawText: string): T[] {
   if (!rawText || rawText.trim() === '') {
@@ -56,7 +52,6 @@ export interface AIInputFile {
 }
 
 async function generateAIText(prompt: string, maxTokens: number, files?: AIInputFile[]): Promise<string> {
-  const anthropicKey = process.env.ANTHROPIC_API_KEY || '';
   const geminiKey = process.env.GEMINI_API_KEY || '';
   const MAX_RETRIES = 2;
   const TIMEOUT_MS = 30000;
@@ -68,21 +63,7 @@ async function generateAIText(prompt: string, maxTokens: number, files?: AIInput
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
-      // Prefer Anthropic when configured.
-      if (anthropicKey && !anthropicKey.includes('replace-with-')) {
-        const response = await anthropic.messages.create({
-          model: AI_MODEL,
-          max_tokens: maxTokens,
-          messages: [{ role: 'user', content: prompt }],
-        });
-        clearTimeout(timeoutId);
-        return response.content
-          .filter(c => c.type === 'text')
-          .map(c => (c as { type: 'text'; text: string }).text)
-          .join('');
-      }
-
-      // Fallback to Gemini
+      // Primary: Gemini
       if (geminiKey && !geminiKey.includes('replace-with-')) {
         const parts: any[] = [{ text: prompt }];
         if (files) {
@@ -117,10 +98,11 @@ async function generateAIText(prompt: string, maxTokens: number, files?: AIInput
         const text = data.candidates?.[0]?.content?.parts?.map((p: any) => p.text || '').join('') || '';
         
         if (!text.trim()) throw new Error('AI returned an empty response');
+        console.log('[AI Pipeline] ✓ Gemini request successful');
         return text;
       }
 
-      throw new Error('No AI provider configured');
+      throw new Error('No AI provider configured (GEMINI_API_KEY required)');
 
     } catch (err: any) {
       lastError = err;
@@ -298,7 +280,7 @@ export async function generateShortlist(
       applicationId: app.id,
       applicantName: app.applicant.fullName,
       matchScore: 0,
-      eligibilityStatus: filterResult.eligibilityStatus,
+      eligibilityStatus: filterResult.eligibilityStatus || 'INELIGIBLE_NOT_VERIFIED',
       skillsMatchScore: 0,
       experienceScore: 0,
       certsScore: 0,

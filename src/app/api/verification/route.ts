@@ -52,6 +52,9 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
   if (profile.workExperiences.length === 0) {
     return error('Please add at least one work experience before requesting verification', 422);
   }
+  if (!profile.communityId) {
+    return error('Please select your community before requesting verification', 422);
+  }
 
   // Check no existing request
   const existing = await prisma.verificationRequest.findUnique({

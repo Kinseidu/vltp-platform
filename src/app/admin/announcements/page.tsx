@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { DashboardLayout, PageHeader } from '@/components/shared/DashboardLayout';
+import { useToast } from '@/components/shared/ToastProvider';
 import { Bell, Send } from 'lucide-react';
 
 export default function AdminAnnouncements() {
@@ -15,6 +16,8 @@ export default function AdminAnnouncements() {
     });
   }, []);
 
+  const toast = useToast();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -26,14 +29,18 @@ export default function AdminAnnouncements() {
       });
       const data = await res.json();
       if (res.ok) {
-        alert(`Announcement sent successfully to ${data.data.sentCount} users.`);
+        toast({
+          title: 'Announcement sent',
+          description: `Delivered to ${data.data.sentCount} recipients.`,
+          variant: 'success',
+        });
         setFormData({ title: '', message: '', targetRole: '', targetCommunityId: '' });
       } else {
-        alert('Failed to send announcement.');
+        toast({ title: 'Announcement failed', description: 'Please try again or check your input.', variant: 'error' });
       }
     } catch (e) {
       console.error(e);
-      alert('Error sending announcement.');
+      toast({ title: 'Network error', description: 'Unable to send announcement right now.', variant: 'error' });
     }
     setLoading(false);
   };
@@ -76,8 +83,16 @@ export default function AdminAnnouncements() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Message Title</label>
-              <input required type="text" placeholder="e.g. System Maintenance Notice" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full border-gray-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 border" />
+              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="announcement-title">Message Title</label>
+              <input
+                id="announcement-title"
+                required
+                type="text"
+                placeholder="e.g. System Maintenance Notice"
+                value={formData.title}
+                onChange={e => setFormData({ ...formData, title: e.target.value })}
+                className="w-full border-gray-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 border"
+              />
             </div>
 
             <div>

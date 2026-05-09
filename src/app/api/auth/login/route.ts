@@ -6,6 +6,7 @@ import { prisma } from '@/lib/db/prisma';
 import { createToken, setSessionCookie } from '@/lib/auth/jwt';
 import { ok, error, withErrorHandler } from '@/lib/utils/api';
 import { audit } from '@/lib/services/audit.service';
+import { checkRateLimit, createRateLimitKey, getClientIp, AUTH_RATE_LIMIT } from '@/lib/utils/rate-limit';
 
 const LoginSchema = z.object({
   email: z.string().email(),
@@ -13,6 +14,22 @@ const LoginSchema = z.object({
 });
 
 export const POST = withErrorHandler(async (req: NextRequest) => {
+  // Rate limit: 3 attempts per minute per IP
+  const clientIp = getClientIp(req.ip, Object.fromEntries(req.headers));
+  const rateLimitKey = createRateLimitKey(clientIp, '/api/auth/login');
+  const { allowed, remaining, resetAt } = checkRateLimit(rateLimitKey, AUTH_RATE_LIMIT);
+
+  if (!allowed) {
+    return error(
+      `Too many login attempts. Please try again in ${Math.ceil((resetAt - Date.now()) / 1000)} seconds`,
+      429,
+      {
+        retryAfter: [Math.ceil((resetAt - Date.now()) / 1000).toString()],
+        remaining: [remaining.toString()],
+      }
+    );
+  }
+
   const body = LoginSchema.parse(await req.json());
 
   const user = await prisma.user.findUnique({

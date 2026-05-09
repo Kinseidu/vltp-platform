@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { DashboardLayout, PageHeader } from '@/components/shared/DashboardLayout';
+import { useToast } from '@/components/shared/ToastProvider';
 import { Shield, Search } from 'lucide-react';
 
 export default function AdminRoles() {
@@ -17,6 +18,8 @@ export default function AdminRoles() {
       setLoading(false);
     });
   }, []);
+
+  const toast = useToast();
 
   const handleRoleChange = async () => {
     if (!selectedUser || !newRole) return;
@@ -34,13 +37,13 @@ export default function AdminRoles() {
         setUsers(users.map(u => u.id === selectedUser.id ? { ...u, role: newRole } : u));
         setSelectedUser(null);
         setNewRole('');
-        alert('Role updated successfully.');
+        toast({ title: 'Role updated', description: 'The user role assignment has been saved.', variant: 'success' });
       } else {
-        alert('Failed to update role.');
+        toast({ title: 'Update failed', description: 'Unable to change the role. Please retry.', variant: 'error' });
       }
     } catch (e) {
       console.error(e);
-      alert('Error updating role.');
+      toast({ title: 'Save error', description: 'Network or server issue prevented saving.', variant: 'error' });
     }
   };
 
