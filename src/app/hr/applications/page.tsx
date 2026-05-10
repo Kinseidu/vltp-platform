@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { DashboardLayout, PageHeader, EmptyState } from '@/components/shared/DashboardLayout';
 import { StatusBadge } from '@/components/shared/StatusBadge';
+import { NotificationBell } from '@/components/shared/NotificationBell';
 import { ClipboardList, Search, User, Briefcase } from 'lucide-react';
 
 export default function HRApplicationsPage() {
@@ -43,8 +44,9 @@ export default function HRApplicationsPage() {
   });
 
   return (
-    <DashboardLayout role={user?.role || 'HR_OFFICER'} userName={user?.email || ''} userEmail={user?.email || ''}>
-      <PageHeader
+      <DashboardLayout role={user?.role || 'HR_OFFICER'} userName={user?.email || ''} userEmail={user?.email || ''}>
+        <NotificationBell role={user?.role} />
+        <PageHeader
         title="Applications"
         subtitle={`${applications.length} total applications`}
       />

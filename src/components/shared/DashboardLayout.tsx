@@ -6,7 +6,6 @@ import { usePathname } from 'next/navigation';
 import { Sidebar } from './Sidebar';
 import { AppSpinner } from './AppSpinner';
 
-
 interface DashboardLayoutProps {
   role: string;
   userName: string;
@@ -16,49 +15,31 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ role, userName, userEmail, children }: DashboardLayoutProps) {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
-
-  useEffect(() => {
-    const saved = window.localStorage.getItem('sidebar_collapsed') === '1';
-    setCollapsed(saved);
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (mounted) {
-      window.localStorage.setItem('sidebar_collapsed', collapsed ? '1' : '0');
-    }
-  }, [collapsed, mounted]);
 
   useEffect(() => {
     setIsNavigating(false);
   }, [pathname]);
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-950">
       <Sidebar
         role={role}
         userName={userName}
         userEmail={userEmail}
-        collapsed={collapsed}
-        onToggle={() => setCollapsed(prev => !prev)}
         onNavigate={() => setIsNavigating(true)}
       />
-        <main
-          className={`flex-1 min-h-screen ${isNavigating ? 'transition-none' : 'transition-all duration-200'} ${collapsed ? 'ml-20' : 'ml-64'}`}
-        >
-          {isNavigating && (
-            <div className="fixed top-4 right-4 z-50 pointer-events-none bg-white/80 backdrop-blur-sm rounded-full p-1.5 border border-gray-200 shadow-sm">
-              <AppSpinner size="sm" />
-            </div>
-          )}
-          <div className="max-w-6xl mx-auto px-6 py-8">
-            {children}
+      <main className="flex-1 min-h-screen ml-16">
+        {isNavigating && (
+          <div className="fixed top-4 right-4 z-50 pointer-events-none bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-full p-1.5 border border-gray-200 dark:border-gray-700 shadow-sm">
+            <AppSpinner size="sm" />
           </div>
-        </main>
-      </div>
+        )}
+        <div className="max-w-6xl mx-auto px-6 py-8">
+          {children}
+        </div>
+      </main>
+    </div>
   );
 }
 
@@ -73,8 +54,8 @@ export function PageHeader({ title, subtitle, action }: PageHeaderProps) {
   return (
     <div className="flex items-start justify-between mb-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-        {subtitle && <p className="text-sm text-gray-500 mt-1">{subtitle}</p>}
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{title}</h1>
+        {subtitle && <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{subtitle}</p>}
       </div>
       {action && <div>{action}</div>}
     </div>
@@ -100,14 +81,14 @@ export function StatCard({ label, value, icon, colour = 'blue', sub }: StatCardP
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5">
+    <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
       <div className="flex items-center justify-between mb-3">
-        <span className="text-sm font-medium text-gray-500">{label}</span>
+        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{label}</span>
         <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${colourMap[colour] || colourMap.blue}`}>
           {icon}
         </div>
       </div>
-      <div className="text-2xl font-bold text-gray-900">{value}</div>
+      <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{value}</div>
       {sub && <div className="text-xs text-gray-400 mt-1">{sub}</div>}
     </div>
   );
@@ -124,11 +105,11 @@ interface EmptyStateProps {
 export function EmptyState({ icon, title, message, action }: EmptyStateProps) {
   return (
     <div className="text-center py-16">
-      <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-gray-100 text-gray-400 mb-4">
+      <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 mb-4">
         {icon}
       </div>
-      <h3 className="text-base font-semibold text-gray-900 mb-1">{title}</h3>
-      <p className="text-sm text-gray-500 max-w-sm mx-auto mb-4">{message}</p>
+      <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-1">{title}</h3>
+      <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm mx-auto mb-4">{message}</p>
       {action}
     </div>
   );

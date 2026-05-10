@@ -4,6 +4,8 @@
 import { useEffect, useState } from 'react';
 import { DashboardLayout, PageHeader, EmptyState } from '@/components/shared/DashboardLayout';
 import { Shield, Search, CheckCircle, XCircle, Filter, Calendar } from 'lucide-react';
+import { AppSpinner } from '@/components/shared/AppSpinner';
+import { NotificationBell } from '@/components/shared/NotificationBell';
 
 export default function ChiefHistoryPage() {
   const [user, setUser] = useState<any>(null);
@@ -27,10 +29,18 @@ export default function ChiefHistoryPage() {
     h.chiefName?.toLowerCase().includes(search.toLowerCase())
   );
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center text-sm text-gray-400">Loading history...</div>;
+  if (loading) return (
+    <DashboardLayout role="CHIEF_STAFF" userName="" userEmail="">
+      <div className="h-[70vh] flex flex-col items-center justify-center gap-3 text-gray-500">
+        <AppSpinner size="md" />
+        <p className="text-sm">Loading history...</p>
+      </div>
+    </DashboardLayout>
+  );
 
   return (
     <DashboardLayout role={user.role} userName={user.email} userEmail={user.email}>
+      <NotificationBell />
       <PageHeader 
         title="Verification History" 
         subtitle="Review all past Chief confirmations and rejections you have recorded."

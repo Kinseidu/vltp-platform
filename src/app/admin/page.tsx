@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { DashboardLayout, PageHeader, StatCard } from '@/components/shared/DashboardLayout';
+import { NotificationBell } from '@/components/shared/NotificationBell';
 import { Users, Shield, FileText, Activity, ArrowRight, Briefcase, CheckCircle, AlertTriangle, XCircle } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -33,6 +34,7 @@ export default function AdminDashboard() {
 
   return (
     <DashboardLayout role={user?.role || 'ADMIN'} userName={user?.email || ''} userEmail={user?.email || ''}>
+      <NotificationBell role={user?.role || 'ADMIN'} />
       <PageHeader title="Admin Dashboard" subtitle="Platform management and oversight" />
 
       {/* Alerts */}

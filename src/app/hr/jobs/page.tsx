@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { DashboardLayout, PageHeader, EmptyState } from '@/components/shared/DashboardLayout';
 import { StatusBadge } from '@/components/shared/StatusBadge';
+import { NotificationBell } from '@/components/shared/NotificationBell';
 import { Plus, Briefcase, Users, Calendar, Search, Loader2, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -58,6 +59,7 @@ export default function HRJobsPage() {
 
   return (
     <DashboardLayout role={user?.role || 'HR_OFFICER'} userName={user?.email || ''} userEmail={user?.email || ''}>
+      <NotificationBell role={user?.role} />
       <PageHeader
         title="Job Postings"
         subtitle={`${jobs.length} total jobs`}

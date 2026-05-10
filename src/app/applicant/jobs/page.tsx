@@ -6,6 +6,7 @@ import { Briefcase, Search } from 'lucide-react';
 import { DashboardLayout, EmptyState, PageHeader } from '@/components/shared/DashboardLayout';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { AppSpinner } from '@/components/shared/AppSpinner';
+import { NotificationBell } from '@/components/shared/NotificationBell';
 
 export default function ApplicantJobsPage() {
   const [user, setUser] = useState<any>(null);
@@ -48,6 +49,7 @@ export default function ApplicantJobsPage() {
 
   return (
     <DashboardLayout role={user.role} userName={user.applicantProfile?.fullName || user.email} userEmail={user.email}>
+      <NotificationBell />
       <PageHeader title="Matched Jobs" subtitle={`${jobs.length} jobs matched to your profile`} />
 
       <div className="relative mb-6">

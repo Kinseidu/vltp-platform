@@ -69,7 +69,7 @@ export default function LoginPage() {
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-8">
           <h2 className="text-lg font-semibold text-gray-900 mb-6">Sign in to your account</h2>
 
           {error && (
@@ -130,8 +130,8 @@ export default function LoginPage() {
           </p>
 
           {/* Demo credentials */}
-          <div className="mt-6 p-3 bg-gray-50 rounded-lg border border-gray-200">
-            <p className="text-xs font-semibold text-gray-500 mb-2">Demo accounts:</p>
+          <div className="mt-6 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">Demo accounts:</p>
             <div className="space-y-1">
               {[
                 ['Applicant', 'kwame.asante@gmail.com', 'Applicant@123'],

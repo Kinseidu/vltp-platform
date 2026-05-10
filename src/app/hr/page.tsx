@@ -5,7 +5,9 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { DashboardLayout, PageHeader, StatCard } from '@/components/shared/DashboardLayout';
 import { StatusBadge } from '@/components/shared/StatusBadge';
+import { NotificationBell } from '@/components/shared/NotificationBell';
 import { Briefcase, Users, BarChart2, FileText, ArrowRight, Plus, Zap } from 'lucide-react';
+import { AppSpinner } from '@/components/shared/AppSpinner';
 
 export default function HRDashboard() {
   const [user, setUser] = useState<any>(null);
@@ -26,7 +28,14 @@ export default function HRDashboard() {
     });
   }, []);
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="text-gray-400 text-sm">Loading...</div></div>;
+  if (loading) return (
+    <DashboardLayout role="HR_OFFICER" userName="" userEmail="">
+      <div className="h-[70vh] flex flex-col items-center justify-center gap-3 text-gray-500">
+        <AppSpinner size="md" />
+        <p className="text-sm">Loading dashboard...</p>
+      </div>
+    </DashboardLayout>
+  );
   if (!user) { window.location.href = '/auth/login'; return null; }
 
   const openJobs = jobs.filter(j => j.status === 'OPEN');
@@ -35,6 +44,7 @@ export default function HRDashboard() {
 
   return (
     <DashboardLayout role={user.role} userName={user.email} userEmail={user.email}>
+      <NotificationBell role={user.role} />
       <PageHeader
         title="HR Dashboard"
         subtitle="Manage jobs, applications, and AI-assisted shortlisting"

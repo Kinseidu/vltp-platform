@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { DashboardLayout, PageHeader } from '@/components/shared/DashboardLayout';
+import { NotificationBell } from '@/components/shared/NotificationBell';
 import { useToast } from '@/components/shared/ToastProvider';
 import { User, MapPin } from 'lucide-react';
 
@@ -52,6 +53,7 @@ export default function AdminYouthPresidents() {
 
   return (
     <DashboardLayout role="ADMIN" userName="Admin" userEmail="admin@example.com">
+      <NotificationBell role="ADMIN" />
       <PageHeader 
         title="Youth President Assignments" 
         subtitle="Assign local Youth Presidents to their respective communities to enable local verification." 

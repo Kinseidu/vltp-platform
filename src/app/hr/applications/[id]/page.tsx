@@ -5,10 +5,12 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { DashboardLayout, PageHeader } from '@/components/shared/DashboardLayout';
 import { StatusBadge } from '@/components/shared/StatusBadge';
+import { NotificationBell } from '@/components/shared/NotificationBell';
 import {
   ChevronLeft, Zap, Loader2, FileText, ExternalLink,
   Edit2, Trash2, Plus, Download, CheckCircle
 } from 'lucide-react';
+import { AppSpinner } from '@/components/shared/AppSpinner';
 import Link from 'next/link';
 
 const STATUS_OPTIONS = [
@@ -119,13 +121,27 @@ export default function HRApplicationDetailPage() {
     { type: 'TECHNICAL', question: '', rubric: '', mappedTo: '', displayOrder: prev.length + 1 }
   ]);
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="text-gray-400 text-sm">Loading application...</div></div>;
-  if (!application) return <div className="min-h-screen flex items-center justify-center"><div className="text-gray-400 text-sm">Application not found.</div></div>;
+  if (loading) return (
+    <DashboardLayout role="HR_OFFICER" userName="" userEmail="">
+      <div className="h-[70vh] flex flex-col items-center justify-center gap-3 text-gray-500">
+        <AppSpinner size="md" />
+        <p className="text-sm">Loading application...</p>
+      </div>
+    </DashboardLayout>
+  );
+  if (!application) return (
+    <DashboardLayout role="HR_OFFICER" userName="" userEmail="">
+      <div className="h-[70vh] flex flex-col items-center justify-center gap-3 text-gray-500">
+        <p className="text-sm">Application not found.</p>
+      </div>
+    </DashboardLayout>
+  );
 
   const { applicant, job, documents, shortlistResult } = application;
 
   return (
     <DashboardLayout role={user?.role || 'HR_OFFICER'} userName={user?.email || ''} userEmail={user?.email || ''}>
+      <NotificationBell role={user?.role} />
       <div className="mb-4">
         <button onClick={() => router.back()} className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
           <ChevronLeft size={16} /> Back

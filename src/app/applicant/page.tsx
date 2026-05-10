@@ -6,7 +6,10 @@ import Link from 'next/link';
 import { DashboardLayout, PageHeader, StatCard } from '@/components/shared/DashboardLayout';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { AppSpinner } from '@/components/shared/AppSpinner';
+import { NotificationBell } from '@/components/shared/NotificationBell';
+
 import { CheckCircle, Briefcase, FileText, Bell, ArrowRight, AlertCircle } from 'lucide-react';
+
 
 export default function ApplicantDashboard() {
   const [user, setUser] = useState<any>(null);
@@ -14,6 +17,7 @@ export default function ApplicantDashboard() {
   const [matchedJobs, setMatchedJobs] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
 
   useEffect(() => {
     Promise.all([
@@ -43,13 +47,20 @@ export default function ApplicantDashboard() {
 
   if (!user) { window.location.href = '/auth/login'; return null; }
 
+  const unreadCount = notifications.length;
+
+
   const profile = user.applicantProfile;
   const isVerified = profile?.verificationStatus === 'VERIFIED';
   const verificationStatus = profile?.verificationStatus || 'PENDING';
 
   return (
-    <DashboardLayout role={user.role} userName={profile?.fullName || user.email} userEmail={user.email}>
+<DashboardLayout role={user.role} userName={profile?.fullName || user.email} userEmail={user.email}>
+      {/* Top-right notifications bell */}
+      <NotificationBell />
+
       <PageHeader
+
         title={`Welcome, ${profile?.fullName?.split(' ')[0] || 'there'}!`}
         subtitle={`Community: ${profile?.community?.name || 'Not set'}`}
       />
@@ -81,7 +92,8 @@ export default function ApplicantDashboard() {
         <StatCard label="Verification Status" value={isVerified ? 'Verified ✓' : 'Pending'} icon={<CheckCircle size={18} />} colour={isVerified ? 'green' : 'yellow'} />
         <StatCard label="Matched Jobs" value={matchedJobs.length} icon={<Briefcase size={18} />} colour="blue" sub={isVerified ? 'Available to apply' : 'Get verified to apply'} />
         <StatCard label="Applications" value={applications.length} icon={<FileText size={18} />} colour="purple" />
-        <StatCard label="Unread Alerts" value={notifications.length} icon={<Bell size={18} />} colour="yellow" />
+        <StatCard label="Unread Alerts" value={unreadCount} icon={<Bell size={18} />} colour="yellow" />
+
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">
@@ -148,6 +160,7 @@ export default function ApplicantDashboard() {
         {/* Recent notifications */}
         {notifications.length > 0 && (
           <div className="bg-white rounded-xl border border-gray-200 p-5 lg:col-span-2">
+
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base font-semibold text-gray-900">Recent Notifications</h2>
               <Link href="/applicant/notifications" className="text-xs text-blue-600 hover:underline flex items-center gap-1">

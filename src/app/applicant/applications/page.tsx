@@ -6,6 +6,7 @@ import { ClipboardList, Search } from 'lucide-react';
 import { DashboardLayout, EmptyState, PageHeader } from '@/components/shared/DashboardLayout';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { AppSpinner } from '@/components/shared/AppSpinner';
+import { NotificationBell } from '@/components/shared/NotificationBell';
 
 export default function ApplicantApplicationsPage() {
   const [user, setUser] = useState<any>(null);
@@ -48,6 +49,7 @@ export default function ApplicantApplicationsPage() {
 
   return (
     <DashboardLayout role={user.role} userName={user.applicantProfile?.fullName || user.email} userEmail={user.email}>
+      <NotificationBell />
       <PageHeader title="My Applications" subtitle={`${applications.length} submitted application${applications.length === 1 ? '' : 's'}`} />
 
       <div className="relative mb-6">

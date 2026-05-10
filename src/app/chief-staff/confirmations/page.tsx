@@ -5,6 +5,7 @@ import { DashboardLayout, EmptyState, PageHeader } from '@/components/shared/Das
 import { AppSpinner } from '@/components/shared/AppSpinner';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { CheckCircle, ChevronDown, ChevronUp, Loader2, Shield, XCircle } from 'lucide-react';
+import { NotificationBell } from '@/components/shared/NotificationBell';
 
 type Decision = 'CONFIRM' | 'REJECT';
 
@@ -63,6 +64,7 @@ export default function ChiefConfirmationsPage() {
   if (loading) {
     return (
       <DashboardLayout role="CHIEF_STAFF" userName="" userEmail="">
+        <NotificationBell />
         <div className="h-[70vh] flex flex-col items-center justify-center gap-3 text-gray-500">
           <AppSpinner size="md" />
           <p className="text-sm">Loading confirmations...</p>
@@ -78,6 +80,7 @@ export default function ChiefConfirmationsPage() {
 
   return (
     <DashboardLayout role={user.role} userName={user.email} userEmail={user.email}>
+      <NotificationBell />
       <PageHeader
         title="Chief Confirmations"
         subtitle={`${requests.length} youth-approved request${requests.length === 1 ? '' : 's'} awaiting confirmation`}

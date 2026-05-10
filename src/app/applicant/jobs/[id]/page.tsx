@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { DashboardLayout } from '@/components/shared/DashboardLayout';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { AppSpinner } from '@/components/shared/AppSpinner';
+import { NotificationBell } from '@/components/shared/NotificationBell';
 import { ChevronLeft, Upload, FileText, Loader2, CheckCircle, AlertCircle, Trash2, ExternalLink, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import Link from 'next/link';
@@ -150,6 +151,7 @@ export default function JobDetailPage() {
   if (step === 'done') {
     return (
       <DashboardLayout role={user?.role || 'APPLICANT'} userName={profile?.fullName || ''} userEmail={user?.email || ''}>
+        <NotificationBell />
         <div className="max-w-lg mx-auto text-center py-20 animate-in fade-in zoom-in-95 duration-500">
           <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
             <CheckCircle size={40} className="text-green-600" />
@@ -173,8 +175,9 @@ export default function JobDetailPage() {
   }
 
   return (
-    <DashboardLayout role={user?.role || 'APPLICANT'} userName={profile?.fullName || ''} userEmail={user?.email || ''}>
-      <div className="mb-4">
+<DashboardLayout role={user?.role || 'APPLICANT'} userName={profile?.fullName || ''} userEmail={user?.email || ''}>
+        <NotificationBell />
+        <div className="mb-4">
         <button onClick={() => step === 'view' ? router.back() : setStep('view')}
           className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 font-medium">
           <ChevronLeft size={16} /> {step === 'view' ? 'Back to Jobs' : 'Back to Job Details'}

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Plus, Save, Trash2 } from 'lucide-react';
 import { DashboardLayout, PageHeader } from '@/components/shared/DashboardLayout';
 import { AppSpinner } from '@/components/shared/AppSpinner';
+import { NotificationBell } from '@/components/shared/NotificationBell';
 
 const PROFICIENCY_OPTIONS = ['BEGINNER', 'INTERMEDIATE', 'PROFICIENT', 'EXPERT'];
 
@@ -183,6 +184,7 @@ export default function ApplicantProfilePage() {
 
   return (
     <DashboardLayout role={user.role} userName={profile.fullName || user.email} userEmail={user.email}>
+      <NotificationBell />
       <PageHeader
         title="My Profile"
         subtitle={`Community: ${profile.community?.name || 'N/A'} · Verification: ${profile.verificationStatus}`}
@@ -198,105 +200,105 @@ export default function ApplicantProfilePage() {
         }
       />
 
-      {message && <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-700">{message}</div>}
+      {message && <div className="mb-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3 text-sm text-blue-700 dark:text-blue-300">{message}</div>}
 
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
-            <h3 className="text-base font-semibold text-gray-900">Basic information</h3>
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 space-y-4">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">Basic information</h3>
             <div className="grid md:grid-cols-2 gap-3">
               <div>
                 <label htmlFor="profile-full-name" className="block text-xs font-medium text-gray-700 mb-1">Full name</label>
-                <input id="profile-full-name" value={profileForm.fullName} onChange={e => setProfileForm(prev => ({ ...prev, fullName: e.target.value }))} placeholder="e.g. Kwame Asante" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                <input id="profile-full-name" value={profileForm.fullName} onChange={e => setProfileForm(prev => ({ ...prev, fullName: e.target.value }))} placeholder="e.g. Kwame Asante" className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm" />
               </div>
               <div>
-                <label htmlFor="profile-phone" className="block text-xs font-medium text-gray-700 mb-1">Phone number</label>
-                <input id="profile-phone" value={profileForm.phone} onChange={e => setProfileForm(prev => ({ ...prev, phone: e.target.value }))} placeholder="+233 24 000 0000" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                <label htmlFor="profile-phone" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Phone number</label>
+                <input id="profile-phone" value={profileForm.phone} onChange={e => setProfileForm(prev => ({ ...prev, phone: e.target.value }))} placeholder="+233 24 000 0000" className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm" />
               </div>
               <div>
-                <label htmlFor="profile-dob" className="block text-xs font-medium text-gray-700 mb-1">Date of birth</label>
-                <input id="profile-dob" type="date" value={profileForm.dateOfBirth} onChange={e => setProfileForm(prev => ({ ...prev, dateOfBirth: e.target.value }))} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                <label htmlFor="profile-dob" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Date of birth</label>
+                <input id="profile-dob" type="date" value={profileForm.dateOfBirth} onChange={e => setProfileForm(prev => ({ ...prev, dateOfBirth: e.target.value }))} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm" />
               </div>
               <div>
-                <label htmlFor="profile-gender" className="block text-xs font-medium text-gray-700 mb-1">Gender</label>
-                <input id="profile-gender" value={profileForm.gender} onChange={e => setProfileForm(prev => ({ ...prev, gender: e.target.value }))} placeholder="Male, Female, Other" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                <label htmlFor="profile-gender" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Gender</label>
+                <input id="profile-gender" value={profileForm.gender} onChange={e => setProfileForm(prev => ({ ...prev, gender: e.target.value }))} placeholder="Male, Female, Other" className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm" />
               </div>
               <div className="md:col-span-2">
-                <label htmlFor="profile-highest-education" className="block text-xs font-medium text-gray-700 mb-1">Highest education</label>
-                <input id="profile-highest-education" value={profileForm.highestEducation} onChange={e => setProfileForm(prev => ({ ...prev, highestEducation: e.target.value }))} placeholder="e.g. Diploma in Mining Technology" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                <label htmlFor="profile-highest-education" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Highest education</label>
+                <input id="profile-highest-education" value={profileForm.highestEducation} onChange={e => setProfileForm(prev => ({ ...prev, highestEducation: e.target.value }))} placeholder="e.g. Diploma in Mining Technology" className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm" />
               </div>
               <div className="md:col-span-2">
-                <label htmlFor="profile-bio" className="block text-xs font-medium text-gray-700 mb-1">Short bio</label>
-                <textarea id="profile-bio" value={profileForm.bio} onChange={e => setProfileForm(prev => ({ ...prev, bio: e.target.value }))} placeholder="Tell us about your experience and strengths" rows={3} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none" />
+                <label htmlFor="profile-bio" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Short bio</label>
+                <textarea id="profile-bio" value={profileForm.bio} onChange={e => setProfileForm(prev => ({ ...prev, bio: e.target.value }))} placeholder="Tell us about your experience and strengths" rows={3} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm resize-none" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <h3 className="text-base font-semibold text-gray-900 mb-3">Skills</h3>
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">Skills</h3>
             <div className="space-y-2 mb-4">
               {(profile.skills || []).map((s: any) => (
-                <div key={s.id} className="flex items-center justify-between border border-gray-200 rounded-lg p-2.5">
+                <div key={s.id} className="flex items-center justify-between border border-gray-200 dark:border-gray-700 rounded-lg p-2.5">
                   <div>
-                    <div className="text-sm font-medium text-gray-900">{s.skill?.name}</div>
+                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{s.skill?.name}</div>
                     <div className="text-xs text-gray-500">{s.yearsOfExp} years · {s.proficiency}</div>
                   </div>
-                  <button onClick={() => deleteSkill(s.id)} className="text-red-600 hover:text-red-700">
+                  <button onClick={() => deleteSkill(s.id)} className="text-red-600 hover:text-red-700 dark:text-red-400">
                     <Trash2 size={15} />
                   </button>
                 </div>
               ))}
-              {(profile.skills || []).length === 0 && <p className="text-sm text-gray-500">No skills added yet.</p>}
+              {(profile.skills || []).length === 0 && <p className="text-sm text-gray-500 dark:text-gray-400">No skills added yet.</p>}
             </div>
 
             <div className="grid md:grid-cols-4 gap-2">
-              <select value={newSkill.skillId} onChange={e => setNewSkill(prev => ({ ...prev, skillId: e.target.value }))} className="px-3 py-2 border border-gray-300 rounded-lg text-sm">
+              <select value={newSkill.skillId} onChange={e => setNewSkill(prev => ({ ...prev, skillId: e.target.value }))} className="px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm">
                 <option value="">Select skill</option>
                 {availableSkills.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
-              <input type="number" min={0} max={50} value={newSkill.yearsOfExp} onChange={e => setNewSkill(prev => ({ ...prev, yearsOfExp: e.target.value }))} placeholder="Years" className="px-3 py-2 border border-gray-300 rounded-lg text-sm" />
-              <select value={newSkill.proficiency} onChange={e => setNewSkill(prev => ({ ...prev, proficiency: e.target.value }))} className="px-3 py-2 border border-gray-300 rounded-lg text-sm">
+              <input type="number" min={0} max={50} value={newSkill.yearsOfExp} onChange={e => setNewSkill(prev => ({ ...prev, yearsOfExp: e.target.value }))} placeholder="Years" className="px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm" />
+              <select value={newSkill.proficiency} onChange={e => setNewSkill(prev => ({ ...prev, proficiency: e.target.value }))} className="px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm">
                 {PROFICIENCY_OPTIONS.map(level => <option key={level} value={level}>{level}</option>)}
               </select>
-              <button onClick={addSkill} className="inline-flex items-center justify-center gap-1 bg-gray-900 hover:bg-black text-white text-sm rounded-lg">
+              <button onClick={addSkill} className="inline-flex items-center justify-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg">
                 <Plus size={14} /> Add
               </button>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <h3 className="text-base font-semibold text-gray-900 mb-3">Work Experience</h3>
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">Work Experience</h3>
             <div className="space-y-2 mb-4">
               {(profile.workExperiences || []).map((w: any) => (
-                <div key={w.id} className="flex items-start justify-between border border-gray-200 rounded-lg p-3">
+                <div key={w.id} className="flex items-start justify-between border border-gray-200 dark:border-gray-700 rounded-lg p-3">
                   <div>
-                    <div className="text-sm font-medium text-gray-900">{w.jobTitle} · {w.employer}</div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{w.jobTitle} · {w.employer}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
                       {new Date(w.startDate).toLocaleDateString()} - {w.endDate ? new Date(w.endDate).toLocaleDateString() : 'Present'}
                     </div>
-                    {w.description && <p className="text-xs text-gray-600 mt-1">{w.description}</p>}
+                    {w.description && <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{w.description}</p>}
                   </div>
-                  <button onClick={() => deleteExperience(w.id)} className="text-red-600 hover:text-red-700">
+                  <button onClick={() => deleteExperience(w.id)} className="text-red-600 hover:text-red-700 dark:text-red-400">
                     <Trash2 size={15} />
                   </button>
                 </div>
               ))}
-              {(profile.workExperiences || []).length === 0 && <p className="text-sm text-gray-500">No work experience added yet.</p>}
+              {(profile.workExperiences || []).length === 0 && <p className="text-sm text-gray-500 dark:text-gray-400">No work experience added yet.</p>}
             </div>
 
             <div className="grid md:grid-cols-2 gap-2">
-              <input value={newExperience.jobTitle} onChange={e => setNewExperience(prev => ({ ...prev, jobTitle: e.target.value }))} placeholder="Job title" className="px-3 py-2 border border-gray-300 rounded-lg text-sm" />
-              <input value={newExperience.employer} onChange={e => setNewExperience(prev => ({ ...prev, employer: e.target.value }))} placeholder="Employer" className="px-3 py-2 border border-gray-300 rounded-lg text-sm" />
-              <input value={newExperience.industry} onChange={e => setNewExperience(prev => ({ ...prev, industry: e.target.value }))} placeholder="Industry (optional)" className="px-3 py-2 border border-gray-300 rounded-lg text-sm" />
-              <input value={newExperience.location} onChange={e => setNewExperience(prev => ({ ...prev, location: e.target.value }))} placeholder="Location (optional)" className="px-3 py-2 border border-gray-300 rounded-lg text-sm" />
-              <input type="date" value={newExperience.startDate} onChange={e => setNewExperience(prev => ({ ...prev, startDate: e.target.value }))} className="px-3 py-2 border border-gray-300 rounded-lg text-sm" />
-              <input type="date" disabled={newExperience.isCurrent} value={newExperience.endDate} onChange={e => setNewExperience(prev => ({ ...prev, endDate: e.target.value }))} className="px-3 py-2 border border-gray-300 rounded-lg text-sm disabled:bg-gray-100" />
-              <label className="md:col-span-2 inline-flex items-center gap-2 text-sm text-gray-700">
+              <input value={newExperience.jobTitle} onChange={e => setNewExperience(prev => ({ ...prev, jobTitle: e.target.value }))} placeholder="Job title" className="px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm" />
+              <input value={newExperience.employer} onChange={e => setNewExperience(prev => ({ ...prev, employer: e.target.value }))} placeholder="Employer" className="px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm" />
+              <input value={newExperience.industry} onChange={e => setNewExperience(prev => ({ ...prev, industry: e.target.value }))} placeholder="Industry (optional)" className="px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm" />
+              <input value={newExperience.location} onChange={e => setNewExperience(prev => ({ ...prev, location: e.target.value }))} placeholder="Location (optional)" className="px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm" />
+              <input type="date" value={newExperience.startDate} onChange={e => setNewExperience(prev => ({ ...prev, startDate: e.target.value }))} className="px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm" />
+              <input type="date" disabled={newExperience.isCurrent} value={newExperience.endDate} onChange={e => setNewExperience(prev => ({ ...prev, endDate: e.target.value }))} className="px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm disabled:bg-gray-100 dark:disabled:bg-gray-700" />
+              <label className="md:col-span-2 inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                 <input type="checkbox" checked={newExperience.isCurrent} onChange={e => setNewExperience(prev => ({ ...prev, isCurrent: e.target.checked }))} />
                 I currently work here
               </label>
-              <textarea value={newExperience.description} onChange={e => setNewExperience(prev => ({ ...prev, description: e.target.value }))} rows={3} placeholder="Description (optional)" className="md:col-span-2 px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none" />
-              <button onClick={addExperience} className="md:col-span-2 inline-flex items-center justify-center gap-1 bg-gray-900 hover:bg-black text-white text-sm rounded-lg py-2.5">
+              <textarea value={newExperience.description} onChange={e => setNewExperience(prev => ({ ...prev, description: e.target.value }))} rows={3} placeholder="Description (optional)" className="md:col-span-2 px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm resize-none" />
+              <button onClick={addExperience} className="md:col-span-2 inline-flex items-center justify-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg py-2.5">
                 <Plus size={14} /> Add experience
               </button>
             </div>
@@ -304,14 +306,14 @@ export default function ApplicantProfilePage() {
         </div>
 
         <div className="space-y-4">
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <h3 className="text-sm font-semibold text-gray-900 mb-2">Verification status</h3>
-            <p className="text-sm text-gray-600">{profile.verificationStatus}</p>
-            <p className="text-xs text-gray-500 mt-2">Update skills and experience before requesting verification.</p>
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Verification status</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{profile.verificationStatus}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Update skills and experience before requesting verification.</p>
           </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <h3 className="text-sm font-semibold text-gray-900 mb-2">Community</h3>
-            <p className="text-sm text-gray-600">{profile.community?.name || 'N/A'}</p>
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Community</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{profile.community?.name || 'N/A'}</p>
           </div>
         </div>
       </div>

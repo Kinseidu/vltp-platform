@@ -46,7 +46,7 @@ export const PUT = withErrorHandler(async (req: NextRequest, { params }: { param
   }
 
   const newStatus = body.decision === 'APPROVE'
-    ? VerificationStatus.VERIFIED
+    ? VerificationStatus.YOUTH_APPROVED
     : VerificationStatus.REJECTED;
 
   // Create youth verification record
@@ -62,9 +62,9 @@ export const PUT = withErrorHandler(async (req: NextRequest, { params }: { param
   // Update request and profile status
   await prisma.verificationRequest.update({
     where: { id: requestId },
-    data: { 
-      status: newStatus, 
-      resolvedAt: new Date() // Always set resolvedAt when YP makes the final call
+    data: {
+      status: newStatus,
+      resolvedAt: body.decision === 'REJECT' ? new Date() : null,
     },
   });
 

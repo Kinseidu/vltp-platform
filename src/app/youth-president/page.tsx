@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { DashboardLayout, PageHeader, StatCard, EmptyState } from '@/components/shared/DashboardLayout';
+import { NotificationBell } from '@/components/shared/NotificationBell';
 import { AppSpinner } from '@/components/shared/AppSpinner';
 import { ArrowRight, CheckCircle2, Clock3, Users } from 'lucide-react';
 
@@ -44,6 +45,7 @@ export default function YouthPresidentDashboardPage() {
 
   return (
     <DashboardLayout role={user.role} userName={user.email} userEmail={user.email}>
+      <NotificationBell role={user.role} />
       <PageHeader
         title="Youth President Dashboard"
         subtitle={community ? `Assigned community: ${community.name}` : 'Community assignment required'}

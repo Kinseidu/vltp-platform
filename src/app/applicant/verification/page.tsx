@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react';
 import { DashboardLayout, PageHeader } from '@/components/shared/DashboardLayout';
 import { StatusBadge } from '@/components/shared/StatusBadge';
+import { NotificationBell } from '@/components/shared/NotificationBell';
 import { CheckCircle, Clock, AlertCircle, Shield, Loader2 } from 'lucide-react';
 
 const STEPS = [
@@ -87,6 +88,7 @@ export default function VerificationPage() {
 
   return (
     <DashboardLayout role={user?.role || 'APPLICANT'} userName={profile?.fullName || user?.email || ''} userEmail={user?.email || ''}>
+      <NotificationBell />
       <PageHeader
         title="Community Verification"
         subtitle="Complete verification to become a Verified Local and apply for jobs"

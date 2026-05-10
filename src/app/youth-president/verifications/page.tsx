@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import { DashboardLayout, PageHeader, EmptyState } from '@/components/shared/DashboardLayout';
+import { NotificationBell } from '@/components/shared/NotificationBell';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { CheckCircle, XCircle, ChevronDown, ChevronUp, User, Briefcase, Loader2, RefreshCw } from 'lucide-react';
 
@@ -53,6 +54,7 @@ export default function YouthVerificationsPage() {
 
   return (
     <DashboardLayout role={user?.role || 'YOUTH_PRESIDENT'} userName={user?.email || ''} userEmail={user?.email || ''}>
+      <NotificationBell role={user?.role || 'YOUTH_PRESIDENT'} />
       <PageHeader
         title="Verification Queue"
         subtitle={community ? `Community: ${community.name} · ${requests.length} pending` : 'Loading...'}

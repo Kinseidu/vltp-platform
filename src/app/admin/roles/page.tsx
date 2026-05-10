@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { DashboardLayout, PageHeader } from '@/components/shared/DashboardLayout';
+import { NotificationBell } from '@/components/shared/NotificationBell';
 import { useToast } from '@/components/shared/ToastProvider';
 import { Shield, Search } from 'lucide-react';
 
@@ -54,6 +55,7 @@ export default function AdminRoles() {
 
   return (
     <DashboardLayout role="ADMIN" userName="Admin" userEmail="admin@example.com">
+      <NotificationBell role="ADMIN" />
       <PageHeader title="Roles & Permissions" subtitle="Assign system roles and prevent unauthorized access combos." />
 
       <div className="grid md:grid-cols-3 gap-6">

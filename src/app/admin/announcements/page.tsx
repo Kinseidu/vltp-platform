@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { DashboardLayout, PageHeader } from '@/components/shared/DashboardLayout';
+import { NotificationBell } from '@/components/shared/NotificationBell';
 import { useToast } from '@/components/shared/ToastProvider';
 import { Bell, Send } from 'lucide-react';
 
@@ -47,6 +48,7 @@ export default function AdminAnnouncements() {
 
   return (
     <DashboardLayout role="ADMIN" userName="Admin" userEmail="admin@example.com">
+      <NotificationBell role="ADMIN" />
       <PageHeader 
         title="Announcements" 
         subtitle="Broadcast notifications to users, roles, or specific communities." 

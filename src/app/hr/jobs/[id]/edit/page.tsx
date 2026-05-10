@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { DashboardLayout, PageHeader } from '@/components/shared/DashboardLayout';
+import { NotificationBell } from '@/components/shared/NotificationBell';
 import { Trash2, Loader2, ChevronLeft, Save } from 'lucide-react';
 import Link from 'next/link';
 
@@ -122,6 +123,7 @@ export default function EditJobPage({ params }: { params: { id: string } }) {
 
   return (
     <DashboardLayout role={user?.role || 'HR_OFFICER'} userName={user?.email || ''} userEmail={user?.email || ''}>
+      <NotificationBell role={user?.role} />
       <div className="mb-4">
         <Link href="/hr/jobs" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
           <ChevronLeft size={16} /> Back to Jobs

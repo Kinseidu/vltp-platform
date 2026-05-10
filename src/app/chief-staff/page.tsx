@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { DashboardLayout, PageHeader, StatCard, EmptyState } from '@/components/shared/DashboardLayout';
 import { AppSpinner } from '@/components/shared/AppSpinner';
 import { CheckCircle2, Shield, Clock3, ArrowRight } from 'lucide-react';
+import { NotificationBell } from '@/components/shared/NotificationBell';
 
 export default function ChiefStaffDashboardPage() {
   const [user, setUser] = useState<any>(null);
@@ -43,6 +44,7 @@ export default function ChiefStaffDashboardPage() {
 
   return (
     <DashboardLayout role={user.role} userName={user.email} userEmail={user.email}>
+      <NotificationBell />
       <PageHeader
         title="Chief Staff Dashboard"
         subtitle="Record Chief confirmations for youth-approved applicants."

@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react';
 import { DashboardLayout, PageHeader, EmptyState } from '@/components/shared/DashboardLayout';
 import { StatusBadge } from '@/components/shared/StatusBadge';
+import { NotificationBell } from '@/components/shared/NotificationBell';
 import { BarChart2, Zap, Loader2, ChevronDown, ChevronUp, CheckCircle, XCircle, Info, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 
@@ -100,8 +101,9 @@ export default function ShortlistingPage() {
   );
 
   return (
-    <DashboardLayout role={user?.role || 'HR_OFFICER'} userName={user?.email || ''} userEmail={user?.email || ''}>
-      <PageHeader
+      <DashboardLayout role={user?.role || 'HR_OFFICER'} userName={user?.email || ''} userEmail={user?.email || ''}>
+        <NotificationBell role={user?.role} />
+        <PageHeader
         title="AI-Assisted Shortlisting"
         subtitle="Hard filters first, then AI ranks eligible applicants. You make the final call."
       />

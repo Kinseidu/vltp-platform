@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { DashboardLayout, PageHeader } from '@/components/shared/DashboardLayout';
+import { NotificationBell } from '@/components/shared/NotificationBell';
 import { Search, Shield, CheckCircle, XCircle, Edit, Trash2, Key, Loader2 } from 'lucide-react';
 import { useToast } from '@/components/shared/ToastProvider';
 import { UserRole } from '@prisma/client';
@@ -192,6 +193,7 @@ export default function AdminUsers() {
 
   return (
     <DashboardLayout role="ADMIN" userName="Admin" userEmail="admin@example.com">
+      <NotificationBell role="ADMIN" />
       <PageHeader title="User Management" subtitle="Manage accounts, status, and system access." />
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">

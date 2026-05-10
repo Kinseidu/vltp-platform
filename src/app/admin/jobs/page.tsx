@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { DashboardLayout, PageHeader } from '@/components/shared/DashboardLayout';
+import { NotificationBell } from '@/components/shared/NotificationBell';
 import { Briefcase, AlertTriangle, Play, Pause } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -18,6 +19,7 @@ export default function AdminJobs() {
 
   return (
     <DashboardLayout role="ADMIN" userName="Admin" userEmail="admin@example.com">
+      <NotificationBell role="ADMIN" />
       <PageHeader 
         title="Job Oversight" 
         subtitle="Monitor HR recruitment campaigns across the platform." 

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { DashboardLayout, PageHeader } from '@/components/shared/DashboardLayout';
+import { NotificationBell } from '@/components/shared/NotificationBell';
 import { MapPin, Plus, UserPlus, Loader2, X, Edit, Trash2, Save, Users } from 'lucide-react';
 import { useToast } from '@/components/shared/ToastProvider';
 
@@ -177,6 +178,7 @@ export default function AdminCommunities() {
 
   return (
     <DashboardLayout role="ADMIN" userName="Admin" userEmail="admin@miningco.gh">
+      <NotificationBell role="ADMIN" />
       <PageHeader 
         title="Community Management" 
         subtitle="Add and manage eligible host communities and their metadata." 

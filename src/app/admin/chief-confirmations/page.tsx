@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { DashboardLayout, PageHeader } from '@/components/shared/DashboardLayout';
+import { NotificationBell } from '@/components/shared/NotificationBell';
 import { Shield, Filter, Search, CheckCircle, XCircle } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -18,6 +19,7 @@ export default function AdminChiefConfirmations() {
 
   return (
     <DashboardLayout role="ADMIN" userName="Admin" userEmail="admin@example.com">
+      <NotificationBell role="ADMIN" />
       <PageHeader 
         title="Chief Confirmation Oversight" 
         subtitle="Monitor and audit final verification sign-offs by Chief Staff." 
