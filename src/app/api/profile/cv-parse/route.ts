@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db/prisma';
 import { getSession } from '@/lib/auth/jwt';
-import { ok, error, unauthorized } from '@/lib/utils/api';
+import { ok, error, unauthorized, withErrorHandler } from '@/lib/utils/api';
 import { parseCV } from '@/lib/ai/cv-parser.service';
 import { UserRole } from '@prisma/client';
 
-export const POST = async (req: NextRequest) => {
+export const POST = withErrorHandler(async (req: NextRequest) => {
   const session = await getSession();
   if (!session || session.role !== UserRole.APPLICANT) return unauthorized();
 
@@ -24,4 +24,4 @@ export const POST = async (req: NextRequest) => {
   const parsed = await parseCV(document.storagePath, document.mimeType);
 
   return ok({ parsed });
-};
+});

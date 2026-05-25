@@ -3,12 +3,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db/prisma';
 import { getSession } from '@/lib/auth/jwt';
-import { forbidden, notFound } from '@/lib/utils/api';
+import { forbidden, notFound, withErrorHandler } from '@/lib/utils/api';
 import { audit } from '@/lib/services/audit.service';
 import { UserRole } from '@prisma/client';
 import { format } from 'date-fns';
 
-export const GET = async (req: NextRequest, { params }: { params: { packId: string } }) => {
+export const GET = withErrorHandler(async (req: NextRequest, { params }: { params: { packId: string } }) => {
   const session = await getSession();
   if (!session || (session.role !== UserRole.HR_OFFICER && session.role !== UserRole.ADMIN)) {
     return forbidden();
@@ -54,7 +54,7 @@ export const GET = async (req: NextRequest, { params }: { params: { packId: stri
     EXPERIENTIAL: '📋 Experiential Questions',
     SAFETY_COMPLIANCE: '⛑ Safety & Compliance Questions',
     SCENARIO_BASED: '🎯 Scenario-Based Questions',
-  };
+};
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -177,4 +177,4 @@ export const GET = async (req: NextRequest, { params }: { params: { packId: stri
       'Content-Disposition': `inline; filename="interview-pack-${application.applicant.fullName.replace(/\s+/g, '-')}.html"`,
     },
   });
-};
+});

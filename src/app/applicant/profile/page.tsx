@@ -1,10 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { Plus, Save, Trash2 } from 'lucide-react';
+import { useEffect, useMemo, useState, useRef } from 'react';
+import { useUnsavedChanges } from '@/lib/hooks/useUnsavedChanges';
+import { Plus, Save, Trash2, Camera, Loader2 } from 'lucide-react';
 import { DashboardLayout, PageHeader } from '@/components/shared/DashboardLayout';
-import { AppSpinner } from '@/components/shared/AppSpinner';
+import { SkeletonForm } from '@/components/shared/Skeleton';
 import { NotificationBell } from '@/components/shared/NotificationBell';
+import { useToast } from '@/components/shared/ToastProvider';
 
 const PROFICIENCY_OPTIONS = ['BEGINNER', 'INTERMEDIATE', 'PROFICIENT', 'EXPERT'];
 
@@ -14,7 +16,13 @@ export default function ApplicantProfilePage() {
   const [allSkills, setAllSkills] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
-  const [message, setMessage] = useState('');
+  const toast = useToast();
+
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [dirty, setDirty] = useState(false);
+  useUnsavedChanges(dirty);
 
   const [profileForm, setProfileForm] = useState({
     fullName: '',
@@ -49,7 +57,7 @@ export default function ApplicantProfilePage() {
 
     if (meData.success) setUser(meData.data.user);
     if (profileData.success) {
-      const p = profileData.data.profile;
+      const p = { ...profileData.data.profile, avatarUrl: profileData.data.avatarUrl };
       setProfile(p);
       setProfileForm({
         fullName: p.fullName || '',
@@ -76,7 +84,6 @@ export default function ApplicantProfilePage() {
 
   const saveProfile = async () => {
     setSavingProfile(true);
-    setMessage('');
     const res = await fetch('/api/profile/me', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -84,18 +91,18 @@ export default function ApplicantProfilePage() {
     });
     const data = await res.json();
     if (!data.success) {
-      setMessage(data.error || 'Failed to save profile');
+      toast({ title: 'Error', description: data.error || 'Failed to save profile', variant: 'error' });
       setSavingProfile(false);
       return;
     }
-    setMessage('Profile updated successfully.');
+    setDirty(false);
+    toast({ title: 'Success', description: 'Profile updated successfully.', variant: 'success' });
     await fetchAll();
     setSavingProfile(false);
   };
 
   const addSkill = async () => {
     if (!newSkill.skillId) return;
-    setMessage('');
     const res = await fetch('/api/profile/skills', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -108,7 +115,7 @@ export default function ApplicantProfilePage() {
     });
     const data = await res.json();
     if (!data.success) {
-      setMessage(data.error || 'Failed to add skill');
+      toast({ title: 'Error', description: data.error || 'Failed to add skill', variant: 'error' });
       return;
     }
     setNewSkill({ skillId: '', yearsOfExp: '0', proficiency: 'BEGINNER', notes: '' });
@@ -116,11 +123,10 @@ export default function ApplicantProfilePage() {
   };
 
   const deleteSkill = async (id: number) => {
-    setMessage('');
     const res = await fetch(`/api/profile/skills/${id}`, { method: 'DELETE' });
     const data = await res.json();
     if (!data.success) {
-      setMessage(data.error || 'Failed to remove skill');
+      toast({ title: 'Error', description: data.error || 'Failed to remove skill', variant: 'error' });
       return;
     }
     await fetchAll();
@@ -128,7 +134,6 @@ export default function ApplicantProfilePage() {
 
   const addExperience = async () => {
     if (!newExperience.jobTitle || !newExperience.employer || !newExperience.startDate) return;
-    setMessage('');
     const res = await fetch('/api/profile/experience', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -139,7 +144,7 @@ export default function ApplicantProfilePage() {
     });
     const data = await res.json();
     if (!data.success) {
-      setMessage(data.error || 'Failed to add experience');
+      toast({ title: 'Error', description: data.error || 'Failed to add experience', variant: 'error' });
       return;
     }
     setNewExperience({
@@ -156,11 +161,10 @@ export default function ApplicantProfilePage() {
   };
 
   const deleteExperience = async (id: number) => {
-    setMessage('');
     const res = await fetch(`/api/profile/experience/${id}`, { method: 'DELETE' });
     const data = await res.json();
     if (!data.success) {
-      setMessage(data.error || 'Failed to remove experience');
+      toast({ title: 'Error', description: data.error || 'Failed to remove experience', variant: 'error' });
       return;
     }
     await fetchAll();
@@ -169,16 +173,45 @@ export default function ApplicantProfilePage() {
   if (loading) {
     return (
       <DashboardLayout role="APPLICANT" userName="" userEmail="">
-        <div className="h-[70vh] flex flex-col items-center justify-center gap-3 text-gray-500">
-          <AppSpinner size="md" />
-          <p className="text-sm">Loading profile...</p>
-        </div>
+        <SkeletonForm />
       </DashboardLayout>
     );
   }
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingAvatar(true);
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+      const res = await fetch('/api/profile/avatar', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (!data.success) {
+        toast({ title: 'Error', description: data.error || 'Failed to upload avatar', variant: 'error' });
+      } else {
+        await fetchAll();
+      }
+    } catch {
+      toast({ title: 'Error', description: 'Network error uploading avatar', variant: 'error' });
+    } finally {
+      setUploadingAvatar(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    const res = await fetch('/api/profile/avatar', { method: 'DELETE' });
+    const data = await res.json();
+    if (!data.success) {
+      toast({ title: 'Error', description: data.error || 'Failed to remove avatar', variant: 'error' });
+    } else {
+      await fetchAll();
+    }
+  };
+
   if (!user || !profile) {
-    window.location.href = '/auth/login';
+    if (typeof window !== 'undefined') window.location.href = '/auth/login';
     return null;
   }
 
@@ -192,15 +225,13 @@ export default function ApplicantProfilePage() {
           <button
             onClick={saveProfile}
             disabled={savingProfile}
-            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg disabled:opacity-50"
+            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Save size={14} />
             {savingProfile ? 'Saving...' : 'Save profile'}
           </button>
         }
       />
-
-      {message && <div className="mb-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3 text-sm text-blue-700 dark:text-blue-300">{message}</div>}
 
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
@@ -209,27 +240,27 @@ export default function ApplicantProfilePage() {
             <div className="grid md:grid-cols-2 gap-3">
               <div>
                 <label htmlFor="profile-full-name" className="block text-xs font-medium text-gray-700 mb-1">Full name</label>
-                <input id="profile-full-name" value={profileForm.fullName} onChange={e => setProfileForm(prev => ({ ...prev, fullName: e.target.value }))} placeholder="e.g. Kwame Asante" className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm" />
+                <input id="profile-full-name" value={profileForm.fullName} onChange={e => { setDirty(true); setProfileForm(prev => ({ ...prev, fullName: e.target.value })); }} placeholder="e.g. Kwame Asante" className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm" />
               </div>
               <div>
                 <label htmlFor="profile-phone" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Phone number</label>
-                <input id="profile-phone" value={profileForm.phone} onChange={e => setProfileForm(prev => ({ ...prev, phone: e.target.value }))} placeholder="+233 24 000 0000" className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm" />
+                <input id="profile-phone" value={profileForm.phone} onChange={e => { setDirty(true); setProfileForm(prev => ({ ...prev, phone: e.target.value })); }} placeholder="+233 24 000 0000" className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm" />
               </div>
               <div>
                 <label htmlFor="profile-dob" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Date of birth</label>
-                <input id="profile-dob" type="date" value={profileForm.dateOfBirth} onChange={e => setProfileForm(prev => ({ ...prev, dateOfBirth: e.target.value }))} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm" />
+                <input id="profile-dob" type="date" value={profileForm.dateOfBirth} onChange={e => { setDirty(true); setProfileForm(prev => ({ ...prev, dateOfBirth: e.target.value })); }} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm" />
               </div>
               <div>
                 <label htmlFor="profile-gender" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Gender</label>
-                <input id="profile-gender" value={profileForm.gender} onChange={e => setProfileForm(prev => ({ ...prev, gender: e.target.value }))} placeholder="Male, Female, Other" className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm" />
+                <input id="profile-gender" value={profileForm.gender} onChange={e => { setDirty(true); setProfileForm(prev => ({ ...prev, gender: e.target.value })); }} placeholder="Male, Female, Other" className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm" />
               </div>
               <div className="md:col-span-2">
                 <label htmlFor="profile-highest-education" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Highest education</label>
-                <input id="profile-highest-education" value={profileForm.highestEducation} onChange={e => setProfileForm(prev => ({ ...prev, highestEducation: e.target.value }))} placeholder="e.g. Diploma in Mining Technology" className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm" />
+                <input id="profile-highest-education" value={profileForm.highestEducation} onChange={e => { setDirty(true); setProfileForm(prev => ({ ...prev, highestEducation: e.target.value })); }} placeholder="e.g. Diploma in Mining Technology" className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm" />
               </div>
               <div className="md:col-span-2">
                 <label htmlFor="profile-bio" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Short bio</label>
-                <textarea id="profile-bio" value={profileForm.bio} onChange={e => setProfileForm(prev => ({ ...prev, bio: e.target.value }))} placeholder="Tell us about your experience and strengths" rows={3} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm resize-none" />
+                <textarea id="profile-bio" value={profileForm.bio} onChange={e => { setDirty(true); setProfileForm(prev => ({ ...prev, bio: e.target.value })); }} placeholder="Tell us about your experience and strengths" rows={3} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm resize-none" />
               </div>
             </div>
           </div>
@@ -307,6 +338,47 @@ export default function ApplicantProfilePage() {
 
         <div className="space-y-4">
           <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
+            <div className="flex flex-col items-center text-center mb-4">
+              <div className="relative group">
+                {profile.avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={profile.avatarUrl}
+                    alt="Avatar"
+                    className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
+                  />
+                ) : (
+                  <div className="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center border-2 border-gray-200">
+                    <Camera size={28} className="text-blue-500" />
+                  </div>
+                )}
+                <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="text-white p-1 hover:bg-white/20 rounded"
+                    title="Upload photo"
+                  >
+                    <Camera size={16} />
+                  </button>
+                </div>
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/avif"
+                className="hidden"
+                onChange={handleAvatarUpload}
+              />
+              {uploadingAvatar && <Loader2 size={14} className="animate-spin text-blue-600 mt-2" />}
+              <p className="text-sm font-medium text-gray-900 mt-2">{profile.fullName}</p>
+              <p className="text-xs text-gray-500">{profile.user?.email}</p>
+              {profile.avatarStoragePath && (
+                <button onClick={handleRemoveAvatar} className="text-xs text-red-500 hover:underline mt-1">
+                  Remove photo
+                </button>
+              )}
+            </div>
             <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Verification status</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">{profile.verificationStatus}</p>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Update skills and experience before requesting verification.</p>

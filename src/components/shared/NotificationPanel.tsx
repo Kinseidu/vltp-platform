@@ -61,7 +61,7 @@ export function NotificationPanel({ isOpen, onClose, notifications = [], onMarkR
     if (ids.length > 0 && onMarkRead) {
       onMarkRead(ids);
     }
-  }, [isOpen]);
+  }, [isOpen, displayedNotifications, onMarkRead]);
 
   const handleNotificationClick = (notification: Notification) => {
     setExpandedId(prev => prev === notification.id ? null : notification.id);
@@ -74,7 +74,7 @@ export function NotificationPanel({ isOpen, onClose, notifications = [], onMarkR
       )}
 
       <div
-        className={`fixed top-20 right-6 w-[22rem] bg-white rounded-2xl shadow-2xl border border-gray-200 z-[101] flex flex-col transition-all duration-200 ease-out ${
+        className={`fixed top-20 right-6 w-[22rem] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 z-[101] flex flex-col transition-all duration-200 ease-out ${
           isOpen
             ? 'opacity-100 translate-x-0 visible'
             : 'opacity-0 translate-x-4 invisible pointer-events-none'
@@ -84,65 +84,65 @@ export function NotificationPanel({ isOpen, onClose, notifications = [], onMarkR
         role="dialog"
         aria-modal={!expandedId}
       >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-700 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-              <Bell size={16} className="text-blue-600" />
+            <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
+              <Bell size={16} className="text-blue-600 dark:text-blue-400" />
             </div>
-            <h2 className="text-sm font-semibold text-gray-900">Notifications</h2>
+            <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Notifications</h2>
             {displayedNotifications.length > 0 && (
-              <span className="text-[11px] font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+              <span className="text-[11px] font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full">
                 {displayedNotifications.length}
               </span>
             )}
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
             aria-label="Close notifications"
           >
-            <X size={16} className="text-gray-500" />
+            <X size={16} className="text-gray-500 dark:text-gray-400" />
           </button>
         </div>
 
         <div className="overflow-y-auto flex-1 min-h-0" style={{ maxHeight: 'calc(100vh - 12rem)' }}>
           {displayedNotifications.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-gray-500 px-6">
-              <Bell size={28} className="mb-3 text-gray-300" />
+            <div className="flex flex-col items-center justify-center py-12 text-gray-500 dark:text-gray-400 px-6">
+              <Bell size={28} className="mb-3 text-gray-300 dark:text-gray-600" />
               <p className="text-sm font-medium">No new notifications</p>
-              <p className="text-xs text-center mt-1 text-gray-400">You're all caught up!</p>
+              <p className="text-xs text-center mt-1 text-gray-400 dark:text-gray-500">You&apos;re all caught up!</p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-gray-100 dark:divide-gray-700">
               {displayedNotifications.map((notification) => {
                 const isExpanded = expandedId === notification.id;
                 return (
                   <div key={notification.id}>
                     <div
                       onClick={() => handleNotificationClick(notification)}
-                      className="px-5 py-4 hover:bg-gray-50 transition-colors cursor-pointer"
+                      className="px-5 py-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
                     >
-                      <p className="text-sm font-medium text-gray-900 leading-snug">{notification.title}</p>
-                      <p className="text-xs text-gray-500 mt-1 leading-relaxed">{notification.message}</p>
-                      <p className="text-[11px] text-gray-400 mt-2">
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100 leading-snug">{notification.title}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">{notification.message}</p>
+                      <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-2">
                         {new Date(notification.timestamp).toLocaleString()}
                       </p>
                     </div>
                     {isExpanded && (
-                      <div className="px-5 pb-4 bg-blue-50/40 border-x border-b border-blue-100 transition-all">
-                        <p className="text-xs text-gray-600 leading-relaxed mb-3">{notification.message}</p>
+                      <div className="px-5 pb-4 bg-blue-50/40 dark:bg-blue-950/30 border-x border-b border-blue-100 dark:border-blue-900 transition-all">
+                        <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed mb-3">{notification.message}</p>
                         {notification.linkUrl && (
                           <Link
                             href={notification.linkUrl}
                             onClick={onClose}
-                            className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:underline"
+                            className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline"
                           >
                             Open related page <ChevronRight size={12} />
                           </Link>
                         )}
                         <button
                           onClick={(e) => { e.stopPropagation(); setExpandedId(null); }}
-                          className="ml-3 inline-flex items-center text-xs font-medium text-gray-500 hover:text-gray-700"
+                          className="ml-3 inline-flex items-center text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                         >
                           Collapse
                         </button>

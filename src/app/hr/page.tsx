@@ -30,7 +30,7 @@ export default function HRDashboard() {
 
   if (loading) return (
     <DashboardLayout role="HR_OFFICER" userName="" userEmail="">
-      <div className="h-[70vh] flex flex-col items-center justify-center gap-3 text-gray-500">
+      <div className="h-[70vh] flex flex-col items-center justify-center gap-3 text-gray-500 dark:text-gray-400">
         <AppSpinner size="md" />
         <p className="text-sm">Loading dashboard...</p>
       </div>
@@ -65,9 +65,9 @@ export default function HRDashboard() {
 
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Active jobs */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <div className="bg-white rounded-xl border border-gray-200 p-5 dark:bg-gray-900 dark:border-gray-700">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-semibold text-gray-900">Job Postings</h2>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Job Postings</h2>
             <Link href="/hr/jobs" className="text-xs text-blue-600 hover:underline flex items-center gap-1">
               Manage all <ArrowRight size={12} />
             </Link>
@@ -75,24 +75,24 @@ export default function HRDashboard() {
           <div className="space-y-3">
             {jobs.slice(0, 5).map((job: any) => (
               <Link key={job.id} href="/hr/jobs"
-                className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 border border-gray-100 transition-colors">
+                className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 border border-gray-100 transition-colors dark:hover:bg-gray-800 dark:border-gray-700">
                 <div>
-                  <div className="text-sm font-medium text-gray-900">{job.title}</div>
-                  <div className="text-xs text-gray-400 mt-0.5">{job._count?.applications || 0} applications · Min {job.minExperience}yr</div>
+                  <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{job.title}</div>
+                  <div className="text-xs text-gray-400 mt-0.5 dark:text-gray-500">{job._count?.applications || 0} applications · Min {job.minExperience}yr</div>
                 </div>
                 <StatusBadge status={job.status} size="sm" />
               </Link>
             ))}
             {jobs.length === 0 && (
-              <p className="text-sm text-gray-400 text-center py-6">No jobs posted yet.</p>
+              <p className="text-sm text-gray-400 text-center py-6 dark:text-gray-500">No jobs posted yet.</p>
             )}
           </div>
         </div>
 
         {/* Recent applications needing attention */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <div className="bg-white rounded-xl border border-gray-200 p-5 dark:bg-gray-900 dark:border-gray-700">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-semibold text-gray-900">Needs Attention</h2>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Needs Attention</h2>
             <Link href="/hr/applications" className="text-xs text-blue-600 hover:underline flex items-center gap-1">
               All applications <ArrowRight size={12} />
             </Link>
@@ -100,16 +100,16 @@ export default function HRDashboard() {
           <div className="space-y-3">
             {pendingReview.slice(0, 5).map((app: any) => (
               <Link key={app.id} href={`/hr/applications/${app.id}`}
-                className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 border border-gray-100 transition-colors">
+                className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 border border-gray-100 transition-colors dark:hover:bg-gray-800 dark:border-gray-700">
                 <div>
-                  <div className="text-sm font-medium text-gray-900">{app.applicant?.fullName}</div>
-                  <div className="text-xs text-gray-400 mt-0.5">{app.job?.title}</div>
+                  <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{app.applicant?.fullName}</div>
+                  <div className="text-xs text-gray-400 mt-0.5 dark:text-gray-500">{app.job?.title}</div>
                 </div>
                 <StatusBadge status={app.status} size="sm" />
               </Link>
             ))}
             {pendingReview.length === 0 && (
-              <p className="text-sm text-gray-400 text-center py-6">No applications pending review.</p>
+              <p className="text-sm text-gray-400 text-center py-6 dark:text-gray-500">No applications pending review.</p>
             )}
           </div>
         </div>

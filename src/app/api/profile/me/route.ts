@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db/prisma';
 import { getSession } from '@/lib/auth/jwt';
 import { ok, unauthorized, notFound, withErrorHandler } from '@/lib/utils/api';
 import { audit } from '@/lib/services/audit.service';
+import { getFileUrl } from '@/lib/services/storage.service';
 import { UserRole } from '@prisma/client';
 
 const UpdateProfileSchema = z.object({
@@ -37,7 +38,10 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
   });
 
   if (!profile) return notFound('Applicant profile not found');
-  return ok({ profile });
+
+  const avatarUrl = profile.avatarStoragePath ? getFileUrl(profile.avatarStoragePath) : null;
+
+  return ok({ profile, avatarUrl });
 });
 
 export const PUT = withErrorHandler(async (req: NextRequest) => {

@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { DashboardLayout, PageHeader, EmptyState } from '@/components/shared/DashboardLayout';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { NotificationBell } from '@/components/shared/NotificationBell';
+import { StaggerContainer, StaggerItem } from '@/components/shared/AnimatedContainer';
+import { SkeletonList } from '@/components/shared/Skeleton';
 import { ClipboardList, Search, User, Briefcase } from 'lucide-react';
 
 export default function HRApplicationsPage() {
@@ -53,20 +55,20 @@ export default function HRApplicationsPage() {
 
       <div className="flex gap-3 mb-6 flex-wrap">
         <div className="relative flex-1 min-w-56">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
           <input
             type="text"
             placeholder="Search applicant or job..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600"
           />
         </div>
 
         <select
           value={status}
           onChange={e => setStatus(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 bg-white dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600"
         >
           <option value="">All statuses</option>
           <option value="SUBMITTED">Submitted</option>
@@ -74,11 +76,12 @@ export default function HRApplicationsPage() {
           <option value="SHORTLISTED">Shortlisted</option>
           <option value="REJECTED">Rejected</option>
           <option value="INVITED_FOR_INTERVIEW">Invited For Interview</option>
+          <option value="HIRED">Hired</option>
         </select>
       </div>
 
       {loading ? (
-        <div className="text-center py-16 text-gray-400 text-sm">Loading applications...</div>
+        <SkeletonList count={5} />
       ) : filtered.length === 0 ? (
         <EmptyState
           icon={<ClipboardList size={24} />}
@@ -86,33 +89,34 @@ export default function HRApplicationsPage() {
           message="Applications will appear here when candidates apply to posted jobs."
         />
       ) : (
-        <div className="space-y-3">
+        <StaggerContainer className="space-y-3">
           {filtered.map((app: any) => (
-            <Link
-              key={app.id}
-              href={`/hr/applications/${app.id}`}
-              className="block bg-white rounded-xl border border-gray-200 p-4 hover:border-blue-300 hover:shadow-sm transition-all"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0">
-                  <div className="text-sm font-semibold text-gray-900">{app.applicant?.fullName || 'Unknown applicant'}</div>
-                  <div className="text-xs text-gray-500 mt-1 flex items-center gap-3 flex-wrap">
-                    <span className="inline-flex items-center gap-1">
-                      <Briefcase size={12} />
-                      {app.job?.title || 'Unknown job'}
-                    </span>
-                    <span className="inline-flex items-center gap-1">
-                      <User size={12} />
-                      {app.applicant?.community?.name || 'No community'}
-                    </span>
-                    <span>{app.documents?.length || 0} document(s)</span>
+            <StaggerItem key={app.id}>
+              <Link
+                href={`/hr/applications/${app.id}`}
+                className="block bg-white rounded-xl border border-gray-200 p-4 hover:border-blue-300 hover:shadow-sm transition-all dark:bg-gray-900 dark:border-gray-700 dark:hover:border-blue-600"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">{app.applicant?.fullName || 'Unknown applicant'}</div>
+                    <div className="text-xs text-gray-500 mt-1 flex items-center gap-3 flex-wrap dark:text-gray-400">
+                      <span className="inline-flex items-center gap-1">
+                        <Briefcase size={12} />
+                        {app.job?.title || 'Unknown job'}
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <User size={12} />
+                        {app.applicant?.community?.name || 'No community'}
+                      </span>
+                      <span>{app.documents?.length || 0} document(s)</span>
+                    </div>
                   </div>
+                  <StatusBadge status={app.status} size="sm" />
                 </div>
-                <StatusBadge status={app.status} size="sm" />
-              </div>
-            </Link>
+              </Link>
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerContainer>
       )}
     </DashboardLayout>
   );

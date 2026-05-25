@@ -91,6 +91,11 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
   });
   if (!job || job.status !== JobStatus.OPEN) return error('This job is not currently open for applications', 404);
 
+  // Deadline check
+  if (job.applicationDeadline && new Date() > job.applicationDeadline) {
+    return error('The application deadline for this job has passed', 400);
+  }
+
   // Community eligibility check
   const communityEligible = job.eligibleCommunities.some(ec => ec.communityId === profile.communityId);
   if (!communityEligible) {

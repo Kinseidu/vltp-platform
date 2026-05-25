@@ -34,6 +34,25 @@ const config: Config = {
           foreground: 'hsl(var(--muted-foreground))',
         },
       },
+      keyframes: {
+        'vltp-shrink': {
+          from: { transform: 'scaleX(1)' },
+          to: { transform: 'scaleX(0)' },
+        },
+        'slide-in': {
+          from: { transform: 'translateX(100%)', opacity: '0' },
+          to: { transform: 'translateX(0)', opacity: '1' },
+        },
+        'slide-out': {
+          from: { transform: 'translateX(0)', opacity: '1' },
+          to: { transform: 'translateX(100%)', opacity: '0' },
+        },
+      },
+      animation: {
+        'vltp-shrink': 'vltp-shrink 3s linear forwards',
+        'slide-in': 'slide-in 0.3s ease-out forwards',
+        'slide-out': 'slide-out 0.3s ease-in forwards',
+      },
     },
   },
   plugins: [require('tailwindcss-animate')],

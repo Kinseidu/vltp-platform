@@ -1,34 +1,34 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db/prisma';
 import { getSession } from '@/lib/auth/jwt';
 import { UserRole } from '@prisma/client';
-import { audit } from '@/lib/services/audit.service';
-import { unauthorized, serverError } from '@/lib/utils/api';
+import { ok, unauthorized, withErrorHandler, getPagination } from '@/lib/utils/api';
 
-export async function GET(req: NextRequest) {
-  try {
-    const session = await getSession();
-    if (!session || session.role !== UserRole.ADMIN) {
-      return unauthorized();
-    }
+export const GET = withErrorHandler(async (req: NextRequest) => {
+  const session = await getSession();
+  if (!session || session.role !== UserRole.ADMIN) {
+    return unauthorized();
+  }
 
-    const { searchParams } = new URL(req.url);
-    const role = searchParams.get('role');
-    const status = searchParams.get('status');
-    const search = searchParams.get('search');
+  const { searchParams } = new URL(req.url);
+  const role = searchParams.get('role');
+  const status = searchParams.get('status');
+  const search = searchParams.get('search');
+  const { page, pageSize, skip } = getPagination(req);
 
-    const where: any = {};
-    if (role) where.role = role as UserRole;
-    if (status === 'active') where.isActive = true;
-    if (status === 'inactive') where.isActive = false;
-    if (search) {
-      where.OR = [
-        { email: { contains: search, mode: 'insensitive' } },
-        { applicantProfile: { fullName: { contains: search, mode: 'insensitive' } } }
-      ];
-    }
+  const where: any = {};
+  if (role) where.role = role as UserRole;
+  if (status === 'active') where.isActive = true;
+  if (status === 'inactive') where.isActive = false;
+  if (search) {
+    where.OR = [
+      { email: { contains: search, mode: 'insensitive' } },
+      { applicantProfile: { fullName: { contains: search, mode: 'insensitive' } } }
+    ];
+  }
 
-    const users = await prisma.user.findMany({
+  const [users, total] = await Promise.all([
+    prisma.user.findMany({
       where,
       select: {
         id: true,
@@ -45,12 +45,12 @@ export async function GET(req: NextRequest) {
           }
         }
       },
-      orderBy: { createdAt: 'desc' }
-    });
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: pageSize,
+    }),
+    prisma.user.count({ where }),
+  ]);
 
-    return NextResponse.json({ success: true, data: { users } });
-  } catch (error) {
-    console.error('[Admin Users GET]', error);
-    return serverError();
-  }
-}
+  return ok({ users, total, page, pageSize });
+});

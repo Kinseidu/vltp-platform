@@ -3,7 +3,7 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db/prisma';
 import { getSession } from '@/lib/auth/jwt';
-import { ok, forbidden, notFound, error, withErrorHandler } from '@/lib/utils/api';
+import { ok, forbidden, notFound, error, unauthorized, withErrorHandler } from '@/lib/utils/api';
 import { audit } from '@/lib/services/audit.service';
 import { runJobMatchingAndNotify } from '@/lib/services/matching.service';
 import { JobStatus, UserRole } from '@prisma/client';
@@ -30,6 +30,9 @@ const UpdateJobSchema = z.object({
 });
 
 export const GET = withErrorHandler(async (req: NextRequest, { params }: { params: { id: string } }) => {
+  const session = await getSession();
+  if (!session) return unauthorized();
+
   const job = await prisma.job.findUnique({
     where: { id: parseInt(params.id) },
     include: {

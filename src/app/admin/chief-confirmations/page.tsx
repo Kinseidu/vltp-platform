@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { DashboardLayout, PageHeader } from '@/components/shared/DashboardLayout';
 import { NotificationBell } from '@/components/shared/NotificationBell';
+import { SkeletonTableRows } from '@/components/shared/Skeleton';
 import { Shield, Filter, Search, CheckCircle, XCircle } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -30,7 +31,7 @@ export default function AdminChiefConfirmations() {
           <div className="relative w-full sm:w-72">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
             <label className="sr-only" htmlFor="chief-confirmations-search">Search applicant or chief</label>
-            <input id="chief-confirmations-search" type="text" placeholder="Search applicant or chief..." className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
+            <input id="chief-confirmations-search" type="text" placeholder="Search applicant or chief..." className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500" />
           </div>
           <button className="flex items-center gap-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg px-4 py-2 hover:bg-gray-50">
             <Filter size={16} /> Filter
@@ -51,7 +52,7 @@ export default function AdminChiefConfirmations() {
             </thead>
             <tbody className="divide-y divide-gray-200">
               {loading ? (
-                <tr><td colSpan={6} className="px-6 py-12 text-center text-gray-500">Loading...</td></tr>
+                <SkeletonTableRows rows={6} cols={6} />
               ) : logs.length === 0 ? (
                 <tr><td colSpan={6} className="px-6 py-12 text-center text-gray-500">No confirmations found.</td></tr>
               ) : (

@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { ChevronLeft, FileText, ExternalLink, Loader2, Wand2, X } from 'lucide-react';
 import { DashboardLayout, EmptyState, PageHeader } from '@/components/shared/DashboardLayout';
 import { StatusBadge } from '@/components/shared/StatusBadge';
-import { AppSpinner } from '@/components/shared/AppSpinner';
+import { SkeletonForm } from '@/components/shared/Skeleton';
 import { NotificationBell } from '@/components/shared/NotificationBell';
 import { useToast } from '@/components/shared/ToastProvider';
 
@@ -64,10 +64,7 @@ export default function ApplicantApplicationDetailPage() {
   if (loading) {
     return (
       <DashboardLayout role="APPLICANT" userName="" userEmail="">
-        <div className="h-[70vh] flex flex-col items-center justify-center gap-3 text-gray-500">
-          <AppSpinner size="md" />
-          <p className="text-sm">Loading application...</p>
-        </div>
+        <SkeletonForm />
       </DashboardLayout>
     );
   }
@@ -121,7 +118,7 @@ export default function ApplicantApplicationDetailPage() {
                 <button
                   onClick={() => handleParseCV(cvDoc.id)}
                   disabled={parsing !== null}
-                  className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg transition-colors disabled:opacity-50"
+                  className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {parsing === cvDoc.id ? <Loader2 size={12} className="animate-spin" /> : <Wand2 size={12} />}
                   {parsing === cvDoc.id ? 'Parsing...' : 'AI Parse CV'}

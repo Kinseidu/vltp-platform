@@ -18,25 +18,25 @@ const ToastContext = createContext<ToastFn | undefined>(undefined);
 
 const toastStyles: Record<ToastVariant, { wrapper: string; iconColor: string; bar: string; iconEl: typeof CheckCircle2 }> = {
   success: {
-    wrapper: 'bg-white border border-gray-100 border-l-4 border-l-emerald-500',
+    wrapper: 'bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 border-l-4 border-l-emerald-500',
     iconColor: 'text-emerald-500',
     bar: 'bg-emerald-500',
     iconEl: CheckCircle2,
   },
   error: {
-    wrapper: 'bg-white border border-gray-100 border-l-4 border-l-red-500',
+    wrapper: 'bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 border-l-4 border-l-red-500',
     iconColor: 'text-red-500',
     bar: 'bg-red-500',
     iconEl: XCircle,
   },
   info: {
-    wrapper: 'bg-white border border-gray-100 border-l-4 border-l-blue-500',
+    wrapper: 'bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 border-l-4 border-l-blue-500',
     iconColor: 'text-blue-500',
     bar: 'bg-blue-500',
     iconEl: Info,
   },
   warning: {
-    wrapper: 'bg-white border border-gray-100 border-l-4 border-l-amber-500',
+    wrapper: 'bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 border-l-4 border-l-amber-500',
     iconColor: 'text-amber-500',
     bar: 'bg-amber-500',
     iconEl: AlertTriangle,
@@ -94,9 +94,9 @@ function ToastCard({ item, onRemove }: { item: ToastItem; onRemove: (id: string)
           <Icon size={17} />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="text-sm font-semibold text-gray-900 leading-snug">{item.title}</div>
+          <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 leading-snug">{item.title}</div>
           {item.description && (
-            <p className="mt-0.5 text-xs text-gray-500 leading-relaxed whitespace-pre-wrap">
+            <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400 leading-relaxed whitespace-pre-wrap">
               {item.description}
             </p>
           )}
@@ -104,7 +104,7 @@ function ToastCard({ item, onRemove }: { item: ToastItem; onRemove: (id: string)
         <button
           type="button"
           onClick={startExit}
-          className="ml-1 shrink-0 rounded-full p-1 text-gray-300 hover:text-gray-600 hover:bg-gray-100 transition-colors focus:outline-none"
+          className="ml-1 shrink-0 rounded-full p-1 text-gray-300 dark:text-gray-600 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none"
           aria-label="Dismiss"
         >
           <X size={13} />

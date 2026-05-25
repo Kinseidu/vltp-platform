@@ -1,8 +1,12 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import dynamic from 'next/dynamic';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Bell } from 'lucide-react';
-import { NotificationPanel } from './NotificationPanel';
+import { Tooltip } from './Tooltip';
+
+const NotificationPanel = dynamic(() => import('./NotificationPanel').then(m => ({ default: m.NotificationPanel })), { ssr: false });
 
 interface NotificationBellProps {
   role?: string;
@@ -43,22 +47,34 @@ export function NotificationBell({ role }: NotificationBellProps) {
 
   return (
     <>
-      <div className="fixed top-6 right-6 z-[200]">
-        <button
-          type="button"
-          onClick={() => setIsOpen(true)}
-          className={
-            count > 0
-              ? 'relative rounded-full bg-blue-600 text-white p-3 shadow-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-300 animate-[pulse_1.6s_ease-in-out_infinite]'
-              : 'relative rounded-full bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 p-3 border border-gray-200 dark:border-gray-700 shadow hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-300'
-          }
-          aria-label="Open notifications"
-        >
+      <div className="fixed top-4 right-4 md:top-6 md:right-6 z-[200]">
+        <Tooltip content="Notifications">
+          <button
+            type="button"
+            onClick={() => setIsOpen(true)}
+            className={
+              count > 0
+                ? 'relative rounded-full bg-blue-600 text-white p-3 shadow-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-300 animate-[pulse_1.6s_ease-in-out_infinite]'
+                : 'relative rounded-full bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 p-3 border border-gray-200 dark:border-gray-700 shadow hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-300'
+            }
+            aria-label="Open notifications"
+          >
           <Bell size={18} className={count > 0 ? 'text-white' : ''} />
-          {count > 0 && (
-            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-white dark:ring-gray-800" aria-hidden="true" />
-          )}
-        </button>
+          <AnimatePresence>
+            {count > 0 && (
+              <motion.span
+                key="badge"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+                className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-white dark:ring-gray-800"
+                aria-hidden="true"
+              />
+            )}
+          </AnimatePresence>
+          </button>
+        </Tooltip>
       </div>
       <NotificationPanel
         isOpen={isOpen}

@@ -1,10 +1,11 @@
 // src/components/shared/DashboardLayout.tsx
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { Sidebar } from './Sidebar';
-import { AppSpinner } from './AppSpinner';
+import { AnimatedContainer } from './AnimatedContainer';
+import { Menu } from 'lucide-react';
 
 interface DashboardLayoutProps {
   role: string;
@@ -15,29 +16,43 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ role, userName, userEmail, children }: DashboardLayoutProps) {
   const pathname = usePathname();
-  const [isNavigating, setIsNavigating] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  useEffect(() => {
-    setIsNavigating(false);
-  }, [pathname]);
+  const handleSidebarToggle = () => setSidebarOpen(prev => !prev);
+  const closeSidebar = () => setSidebarOpen(false);
 
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-950">
+      {/* Mobile backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={closeSidebar}
+        />
+      )}
+
       <Sidebar
         role={role}
         userName={userName}
         userEmail={userEmail}
-        onNavigate={() => setIsNavigating(true)}
+        sidebarOpen={sidebarOpen}
+        onSidebarToggle={handleSidebarToggle}
+        onNavigate={closeSidebar}
       />
-      <main className="flex-1 min-h-screen ml-16">
-        {isNavigating && (
-          <div className="fixed top-4 right-4 z-50 pointer-events-none bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-full p-1.5 border border-gray-200 dark:border-gray-700 shadow-sm">
-            <AppSpinner size="sm" />
-          </div>
-        )}
-        <div className="max-w-6xl mx-auto px-6 py-8">
+
+      {/* Mobile hamburger button */}
+      <button
+        onClick={handleSidebarToggle}
+        className="fixed top-4 left-4 z-50 md:hidden bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-2 shadow-sm"
+        aria-label="Open sidebar menu"
+      >
+        <Menu size={20} className="text-gray-700 dark:text-gray-300" />
+      </button>
+
+      <main className="flex-1 min-h-screen ml-0 md:ml-16">
+        <AnimatedContainer key={pathname} animation="fadeUp" className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
           {children}
-        </div>
+        </AnimatedContainer>
       </main>
     </div>
   );

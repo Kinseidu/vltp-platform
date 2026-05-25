@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { DashboardLayout, PageHeader, StatCard } from '@/components/shared/DashboardLayout';
 import { StatusBadge } from '@/components/shared/StatusBadge';
-import { AppSpinner } from '@/components/shared/AppSpinner';
+import { SkeletonDashboard } from '@/components/shared/Skeleton';
 import { NotificationBell } from '@/components/shared/NotificationBell';
 
 import { CheckCircle, Briefcase, FileText, Bell, ArrowRight, AlertCircle } from 'lucide-react';
@@ -37,10 +37,7 @@ export default function ApplicantDashboard() {
   if (loading) {
     return (
       <DashboardLayout role="APPLICANT" userName="" userEmail="">
-        <div className="h-[70vh] flex flex-col items-center justify-center gap-3 text-gray-500">
-          <AppSpinner size="md" />
-          <p className="text-sm">Loading dashboard...</p>
-        </div>
+        <SkeletonDashboard />
       </DashboardLayout>
     );
   }
@@ -74,14 +71,14 @@ export default function ApplicantDashboard() {
         }`}>
           <AlertCircle size={18} className={verificationStatus === 'REJECTED' ? 'text-red-500 mt-0.5' : 'text-amber-500 mt-0.5'} />
           <div className="flex-1">
-            <p className="text-sm font-medium text-gray-800">
+            <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
               {verificationStatus === 'PENDING' && 'Complete your community verification to unlock job applications'}
               {verificationStatus === 'YOUTH_APPROVED' && 'Youth President approved! Awaiting Chief confirmation.'}
               {verificationStatus === 'REJECTED' && 'Your verification was not approved. Please contact your Youth President.'}
             </p>
-            <p className="text-xs text-gray-500 mt-0.5">Current status: <StatusBadge status={verificationStatus} size="sm" /></p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Current status: <StatusBadge status={verificationStatus} size="sm" /></p>
           </div>
-          <Link href="/applicant/verification" className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">
+          <Link href="/applicant/verification" className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline whitespace-nowrap">
             View details →
           </Link>
         </div>
@@ -98,23 +95,23 @@ export default function ApplicantDashboard() {
 
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Recent applications */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-semibold text-gray-900">My Applications</h2>
-            <Link href="/applicant/applications" className="text-xs text-blue-600 hover:underline flex items-center gap-1">
+            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">My Applications</h2>
+            <Link href="/applicant/applications" className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
               View all <ArrowRight size={12} />
             </Link>
           </div>
           {applications.length === 0 ? (
-            <p className="text-sm text-gray-400 py-6 text-center">No applications yet. Browse matched jobs to get started.</p>
+            <p className="text-sm text-gray-400 dark:text-gray-500 py-6 text-center">No applications yet. Browse matched jobs to get started.</p>
           ) : (
             <div className="space-y-3">
               {applications.slice(0, 4).map((app: any) => (
                 <Link key={app.id} href={`/applicant/applications/${app.id}`}
-                  className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 border border-gray-100 transition-colors">
+                  className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 border border-gray-100 dark:border-gray-700 transition-colors">
                   <div>
-                    <div className="text-sm font-medium text-gray-900">{app.job?.title}</div>
-                    <div className="text-xs text-gray-400 mt-0.5">
+                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{app.job?.title}</div>
+                    <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
                       {app.documents?.length || 0} document(s) uploaded
                     </div>
                   </div>
@@ -126,15 +123,15 @@ export default function ApplicantDashboard() {
         </div>
 
         {/* Matched jobs */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-semibold text-gray-900">Matched Jobs</h2>
-            <Link href="/applicant/jobs" className="text-xs text-blue-600 hover:underline flex items-center gap-1">
+            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Matched Jobs</h2>
+            <Link href="/applicant/jobs" className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
               View all <ArrowRight size={12} />
             </Link>
           </div>
           {matchedJobs.length === 0 ? (
-            <p className="text-sm text-gray-400 py-6 text-center">
+            <p className="text-sm text-gray-400 dark:text-gray-500 py-6 text-center">
               {isVerified
                 ? 'No matched jobs at the moment. Add more skills to your profile.'
                 : 'Complete verification to see matched jobs.'}
@@ -143,10 +140,10 @@ export default function ApplicantDashboard() {
             <div className="space-y-3">
               {matchedJobs.slice(0, 4).map((job: any) => (
                 <Link key={job.id} href={`/applicant/jobs/${job.id}`}
-                  className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 border border-gray-100 transition-colors">
+                  className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 border border-gray-100 dark:border-gray-700 transition-colors">
                   <div>
-                    <div className="text-sm font-medium text-gray-900">{job.title}</div>
-                    <div className="text-xs text-gray-400 mt-0.5">
+                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{job.title}</div>
+                    <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
                       Min. {job.minExperience}yr exp · {job._count?.applications || 0} applicants
                     </div>
                   </div>
@@ -159,21 +156,21 @@ export default function ApplicantDashboard() {
 
         {/* Recent notifications */}
         {notifications.length > 0 && (
-          <div className="bg-white rounded-xl border border-gray-200 p-5 lg:col-span-2">
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-5 lg:col-span-2">
 
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-semibold text-gray-900">Recent Notifications</h2>
-              <Link href="/applicant/notifications" className="text-xs text-blue-600 hover:underline flex items-center gap-1">
+              <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Recent Notifications</h2>
+              <Link href="/applicant/notifications" className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
                 View all <ArrowRight size={12} />
               </Link>
             </div>
             <div className="space-y-2">
               {notifications.slice(0, 5).map((n: any) => (
-                <div key={n.id} className="flex items-start gap-3 p-3 rounded-lg bg-blue-50 border border-blue-100">
+                <div key={n.id} className="flex items-start gap-3 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800">
                   <Bell size={14} className="text-blue-500 mt-0.5 flex-shrink-0" />
                   <div>
-                    <div className="text-sm font-medium text-gray-900">{n.title}</div>
-                    <div className="text-xs text-gray-500">{n.message}</div>
+                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{n.title}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">{n.message}</div>
                   </div>
                 </div>
               ))}

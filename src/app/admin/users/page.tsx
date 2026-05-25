@@ -3,9 +3,12 @@
 import { useEffect, useState } from 'react';
 import { DashboardLayout, PageHeader } from '@/components/shared/DashboardLayout';
 import { NotificationBell } from '@/components/shared/NotificationBell';
+import { motion } from 'framer-motion';
+import { SkeletonTableRows } from '@/components/shared/Skeleton';
 import { Search, Shield, CheckCircle, XCircle, Edit, Trash2, Key, Loader2 } from 'lucide-react';
 import { useToast } from '@/components/shared/ToastProvider';
 import { UserRole } from '@prisma/client';
+import { useFocusTrap } from '@/lib/hooks/useFocusTrap';
 
 export default function AdminUsers() {
   const [users, setUsers] = useState<any[]>([]);
@@ -191,21 +194,38 @@ export default function AdminUsers() {
     setShowPasswordResetModal(true);
   };
 
+  useEffect(() => {
+    if (!showEditModal && !showPasswordResetModal) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowEditModal(false);
+        setEditingUser(null);
+        setShowPasswordResetModal(false);
+        setResettingUser(null);
+      }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [showEditModal, showPasswordResetModal]);
+
+  const editModalRef = useFocusTrap(showEditModal);
+  const passwordModalRef = useFocusTrap(showPasswordResetModal);
+
   return (
     <DashboardLayout role="ADMIN" userName="Admin" userEmail="admin@example.com">
       <NotificationBell role="ADMIN" />
       <PageHeader title="User Management" subtitle="Manage accounts, status, and system access." />
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="p-4 border-b border-gray-200 flex flex-col sm:flex-row gap-4 items-center justify-between bg-gray-50/50">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden dark:bg-gray-900 dark:border-gray-700">
+        <div className="p-4 border-b border-gray-200 flex flex-col sm:flex-row gap-4 items-center justify-between bg-gray-50/50 dark:border-gray-700 dark:bg-gray-800/50">
           <div className="relative w-full sm:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" size={16} />
             <input
               type="text"
               placeholder="Search by email or name..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus-visible:ring-2 focus-visible:ring-blue-500 focus:border-blue-500 outline-none dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600"
             />
           </div>
 
@@ -213,7 +233,7 @@ export default function AdminUsers() {
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
-              className="text-sm border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
+              className="text-sm border border-gray-300 rounded-lg px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600"
             >
               <option value="">All Roles</option>
               <option value={UserRole.APPLICANT}>Applicant</option>
@@ -226,7 +246,7 @@ export default function AdminUsers() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="text-sm border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
+              className="text-sm border border-gray-300 rounded-lg px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600"
             >
               <option value="">All Statuses</option>
               <option value="active">Active</option>
@@ -236,8 +256,8 @@ export default function AdminUsers() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-gray-600">
-            <thead className="bg-gray-50 border-b border-gray-200 text-gray-900">
+          <table className="w-full text-left text-sm text-gray-600 dark:text-gray-400">
+            <thead className="bg-gray-50 border-b border-gray-200 text-gray-900 dark:bg-gray-800 dark:text-gray-100">
               <tr>
                 <th className="px-6 py-3 font-semibold">User</th>
                 <th className="px-6 py-3 font-semibold">Role</th>
@@ -246,24 +266,32 @@ export default function AdminUsers() {
                 <th className="px-6 py-3 font-semibold text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <motion.tbody
+              className="divide-y divide-gray-200 dark:divide-gray-700"
+              initial="hidden"
+              animate="visible"
+              variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.03 } } }}
+            >
               {loading ? (
-                <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
-                    <div className="animate-spin w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full mx-auto mb-2" />
-                    Loading users...
-                  </td>
-                </tr>
+                <SkeletonTableRows rows={6} cols={5} />
               ) : users.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-gray-500">No users found matching your filters.</td>
+                  <td colSpan={5} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">No users found matching your filters.</td>
                 </tr>
               ) : (
                 users.map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50">
+                  <motion.tr
+                    key={user.id}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-800"
+                    variants={{
+                      hidden: { opacity: 0, x: -8 },
+                      visible: { opacity: 1, x: 0 },
+                    }}
+                    transition={{ duration: 0.25, ease: 'easeOut' }}
+                  >
                     <td className="px-6 py-4">
-                      <div className="font-medium text-gray-900">{user.applicantProfile?.fullName || 'N/A'}</div>
-                      <div className="text-gray-500 text-xs">{user.email}</div>
+                      <div className="font-medium text-gray-900 dark:text-gray-100">{user.applicantProfile?.fullName || 'N/A'}</div>
+                      <div className="text-gray-500 text-xs dark:text-gray-400">{user.email}</div>
                     </td>
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-700">
@@ -271,7 +299,7 @@ export default function AdminUsers() {
                         {String(user.role || '').replace('_', ' ')}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-gray-500">{user.applicantProfile?.community?.name || '-'}</td>
+                    <td className="px-6 py-4 text-gray-500 dark:text-gray-400">{user.applicantProfile?.community?.name || '-'}</td>
                     <td className="px-6 py-4">
                       {user.isActive ? (
                         <span className="inline-flex items-center gap-1.5 text-xs font-medium text-green-700 bg-green-50 px-2.5 py-1 rounded-full">
@@ -288,7 +316,7 @@ export default function AdminUsers() {
                         <button
                           onClick={() => openEditModal(user)}
                           disabled={processing === user.id}
-                          className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors disabled:opacity-50"
+                          className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed dark:text-gray-500 dark:hover:bg-blue-900/30"
                           title="Edit user"
                         >
                           <Edit size={16} />
@@ -296,7 +324,7 @@ export default function AdminUsers() {
                         <button
                           onClick={() => openPasswordResetModal(user)}
                           disabled={processing === user.id}
-                          className="p-1.5 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded transition-colors disabled:opacity-50"
+                          className="p-1.5 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed dark:text-gray-500 dark:hover:bg-orange-900/30"
                           title="Reset password"
                         >
                           <Key size={16} />
@@ -304,7 +332,7 @@ export default function AdminUsers() {
                         <button
                           onClick={() => toggleStatus(user.id, user.isActive)}
                           disabled={processing === user.id}
-                          className={`p-1.5 rounded transition-colors disabled:opacity-50 ${user.isActive ? 'text-red-400 hover:text-red-600 hover:bg-red-50' : 'text-green-400 hover:text-green-600 hover:bg-green-50'}`}
+                          className={`p-1.5 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${user.isActive ? 'text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30' : 'text-green-400 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/30'}`}
                           title={user.isActive ? 'Deactivate user' : 'Activate user'}
                         >
                           {user.isActive ? <XCircle size={16} /> : <CheckCircle size={16} />}
@@ -312,25 +340,25 @@ export default function AdminUsers() {
                         <button
                           onClick={() => deleteUser(user.id)}
                           disabled={processing === user.id}
-                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
+                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed dark:text-gray-500 dark:hover:bg-red-900/30"
                           title="Delete user"
                         >
                           <Trash2 size={16} />
                         </button>
                       </div>
                     </td>
-                  </tr>
+                  </motion.tr>
                 ))
               )}
-            </tbody>
+            </motion.tbody>
           </table>
         </div>
       </div>
 
       {/* Edit User Modal */}
       {showEditModal && editingUser && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" role="dialog" aria-modal="true" onClick={() => { setShowEditModal(false); setEditingUser(null); }}>
+          <div ref={editModalRef} className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden dark:bg-gray-900" onClick={(e) => e.stopPropagation()}>
             <form onSubmit={(e) => {
               e.preventDefault();
               updateUser({
@@ -341,43 +369,43 @@ export default function AdminUsers() {
                 fullName: editingUser.applicantProfile?.fullName,
               });
             }} className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Edit User: {editingUser.email}</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 dark:text-gray-100">Edit User: {editingUser.email}</h3>
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="editFullName" className="block text-sm font-medium text-gray-700">Full Name</label>
+                  <label htmlFor="editFullName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Full Name</label>
                   <input
                     type="text"
                     id="editFullName"
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600"
                     value={editingUser.applicantProfile?.fullName || ''}
                     onChange={(e) => setEditingUser({ ...editingUser, applicantProfile: { ...editingUser.applicantProfile, fullName: e.target.value } })}
                   />
                 </div>
                 <div>
-                  <label htmlFor="editEmail" className="block text-sm font-medium text-gray-700">Email</label>
+                  <label htmlFor="editEmail" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
                   <input
                     type="email"
                     id="editEmail"
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600"
                     value={editingUser.email}
                     onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
                   />
                 </div>
                 <div>
-                  <label htmlFor="editPhone" className="block text-sm font-medium text-gray-700">Phone</label>
+                  <label htmlFor="editPhone" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Phone</label>
                   <input
                     type="text"
                     id="editPhone"
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600"
                     value={editingUser.phone || ''}
                     onChange={(e) => setEditingUser({ ...editingUser, phone: e.target.value })}
                   />
                 </div>
                 <div>
-                  <label htmlFor="editRole" className="block text-sm font-medium text-gray-700">Role</label>
+                  <label htmlFor="editRole" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Role</label>
                   <select
                     id="editRole"
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600"
                     value={editingUser.role}
                     onChange={(e) => setEditingUser({ ...editingUser, role: e.target.value })}
                   >
@@ -396,7 +424,7 @@ export default function AdminUsers() {
                     checked={editingUser.isActive}
                     onChange={(e) => setEditingUser({ ...editingUser, isActive: e.target.checked })}
                   />
-                  <label htmlFor="editIsActive" className="ml-2 block text-sm text-gray-900">
+                  <label htmlFor="editIsActive" className="ml-2 block text-sm text-gray-900 dark:text-gray-100">
                     Active
                   </label>
                 </div>
@@ -408,13 +436,14 @@ export default function AdminUsers() {
                     setShowEditModal(false);
                     setEditingUser(null);
                   }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors dark:text-gray-300 dark:bg-gray-800 dark:hover:bg-gray-700"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={processing === editingUser.id}
+                  aria-busy={processing === editingUser.id}
                   className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors disabled:opacity-50 flex items-center"
                 >
                   {processing === editingUser.id && <Loader2 size={14} className="animate-spin mr-2" />}
@@ -428,34 +457,36 @@ export default function AdminUsers() {
 
       {/* Password Reset Modal */}
       {showPasswordResetModal && resettingUser && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" role="dialog" aria-modal="true" onClick={() => { setShowPasswordResetModal(false); setResettingUser(null); }}>
+          <div ref={passwordModalRef} className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden dark:bg-gray-900" onClick={(e) => e.stopPropagation()}>
             <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Reset Password: {resettingUser.email}</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 dark:text-gray-100">Reset Password: {resettingUser.email}</h3>
               <form onSubmit={handlePasswordReset} className="space-y-4">
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-800">
                   <strong>Warning:</strong> This will immediately change the password for <strong>{resettingUser.email}</strong>.
                   Make sure the user knows their new password.
                 </div>
                 <div>
-                  <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">New Password</label>
-                  <input
+                  <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300">New Password</label>
+<input
                     type="password"
                     id="newPassword"
                     required
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    aria-required="true"
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="Enter new password..."
                   />
                 </div>
                 <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">Confirm New Password</label>
-                  <input
+                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Confirm New Password</label>
+<input
                     type="password"
                     id="confirmPassword"
                     required
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    aria-required="true"
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Confirm new password..."
@@ -474,18 +505,19 @@ export default function AdminUsers() {
                       setConfirmPassword('');
                       setPasswordError('');
                     }}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors dark:text-gray-300 dark:bg-gray-800 dark:hover:bg-gray-700"
                   >
                     Cancel
                   </button>
-                  <button
-                    type="submit"
-                    disabled={processing === resettingUser.id || !newPassword || !confirmPassword}
-                    className="px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-md transition-colors disabled:opacity-50 flex items-center"
-                  >
-                    {processing === resettingUser.id && <Loader2 size={14} className="animate-spin mr-2" />}
-                    Reset Password
-                  </button>
+                <button
+                  type="submit"
+                  disabled={processing === resettingUser.id || !newPassword || !confirmPassword}
+                  aria-busy={processing === resettingUser.id}
+                  className="px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-md transition-colors disabled:opacity-50 flex items-center"
+                >
+                  {processing === resettingUser.id && <Loader2 size={14} className="animate-spin mr-2" />}
+                  Reset Password
+                </button>
                 </div>
               </form>
             </div>

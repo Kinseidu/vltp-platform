@@ -1,13 +1,15 @@
 // src/components/shared/Sidebar.tsx
 'use client';
 
+import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils/cn';
 import { useTheme } from './ThemeProvider';
+import { Tooltip } from './Tooltip';
 import {
   User, Briefcase, CheckCircle, Bell, Home, Users, Shield, Key,
-  BarChart2, FileText, ClipboardList, Settings, LogOut, HardHat, MapPin, Sun, Moon
+  BarChart2, FileText, ClipboardList, Settings, LogOut, HardHat, MapPin, Sun, Moon, X
 } from 'lucide-react';
 
 interface NavItem {
@@ -59,10 +61,12 @@ interface SidebarProps {
   role: string;
   userName: string;
   userEmail: string;
-  onNavigate: () => void;
+  onNavigate?: () => void;
+  sidebarOpen?: boolean;
+  onSidebarToggle?: () => void;
 }
 
-export function Sidebar({ role, userName, userEmail, onNavigate }: SidebarProps) {
+export function Sidebar({ role, userName, userEmail, onNavigate, sidebarOpen, onSidebarToggle }: SidebarProps) {
   const pathname = usePathname();
   const navItems = navByRole[role] || [];
   const { resolvedTheme, setTheme } = useTheme();
@@ -72,21 +76,26 @@ export function Sidebar({ role, userName, userEmail, onNavigate }: SidebarProps)
     window.location.href = '/auth/login';
   };
 
-  return (
-    <aside
-      className="fixed inset-y-0 left-0 bg-slate-900 text-white flex flex-col z-40 group transition-all duration-300 ease-out w-16 hover:w-52"
-    >
-      <div className="flex items-center justify-center py-5 border-b border-slate-700 px-2 group-hover:px-6 transition-all duration-300 ease-out">
+  const sidebarContent = (
+    <>
+      <div className="flex items-center gap-3 py-5 border-b border-slate-700 px-4 shrink-0">
         <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center shrink-0">
           <HardHat size={18} className="text-white" />
         </div>
-        <div className="ml-3 min-w-0 opacity-0 group-hover:opacity-100 transition-all duration-300 ease-out">
-          <div className="text-sm font-semibold leading-tight whitespace-nowrap">Talent Platform</div>
-          <div className="text-xs text-slate-400 leading-tight whitespace-nowrap">Mining Recruitment</div>
+        <div className="min-w-0 overflow-hidden whitespace-nowrap">
+          <div className="text-sm font-semibold leading-tight">Talent Platform</div>
+          <div className="text-xs text-slate-400 leading-tight">Mining Recruitment</div>
         </div>
+        <button
+          onClick={onSidebarToggle}
+          className="md:hidden ml-auto text-slate-400 hover:text-white p-1 rounded"
+          aria-label="Close sidebar"
+        >
+          <X size={20} />
+        </button>
       </div>
 
-      <nav className="flex-1 py-4 space-y-1 overflow-y-auto overflow-x-hidden px-2 group-hover:px-3 transition-all duration-300 ease-out">
+      <nav className="flex-1 py-4 space-y-1 overflow-y-auto overflow-x-hidden px-3">
         {navItems.map(item => {
           const isDashboard = item.label === 'Dashboard';
           const isActive = pathname === item.href || (!isDashboard && pathname.startsWith(item.href + '/'));
@@ -95,13 +104,12 @@ export function Sidebar({ role, userName, userEmail, onNavigate }: SidebarProps)
               key={item.href}
               href={item.href}
               onClick={() => {
-                if (pathname !== item.href) onNavigate();
+                if (pathname !== item.href) onNavigate?.();
               }}
               title={item.label}
               aria-label={item.label}
               className={cn(
-                'flex items-center rounded-lg text-sm font-medium transition-colors',
-                'py-2.5 px-0 group-hover:px-2 group-hover:py-2.5',
+                'flex items-center rounded-lg text-sm font-medium transition-colors py-2.5 active:scale-[0.97]',
                 isActive
                   ? 'bg-blue-600 text-white'
                   : 'text-slate-300 hover:bg-slate-800 hover:text-white'
@@ -109,7 +117,7 @@ export function Sidebar({ role, userName, userEmail, onNavigate }: SidebarProps)
               <span className="shrink-0 flex items-center justify-center w-8">
                 {item.icon}
               </span>
-              <span className="ml-3 overflow-hidden whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all duration-300 ease-out">
+              <span className="ml-3 overflow-hidden whitespace-nowrap">
                 {item.label}
               </span>
             </Link>
@@ -117,36 +125,74 @@ export function Sidebar({ role, userName, userEmail, onNavigate }: SidebarProps)
         })}
       </nav>
 
-      <div className="border-t border-slate-700 p-2 group-hover:p-4 transition-all duration-300 ease-out">
-        <div className="flex items-center justify-center mb-3">
+      <div className="border-t border-slate-700 p-4 shrink-0">
+        <div className="flex items-center gap-3 mb-3">
           <div className="w-8 h-8 rounded-full bg-slate-600 flex items-center justify-center text-sm font-medium shrink-0">
             {userName?.charAt(0)?.toUpperCase() || 'U'}
           </div>
-          <div className="ml-3 min-w-0 overflow-hidden whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all duration-300 ease-out">
+          <div className="min-w-0 overflow-hidden whitespace-nowrap">
             <div className="text-sm font-medium text-white truncate">{userName || userEmail}</div>
             <div className="text-xs text-slate-400 truncate">{role.replace('_', ' ')}</div>
           </div>
         </div>
-        <button
-          onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
-          className="w-full flex items-center justify-center text-sm text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors py-2.5 px-0 group-hover:px-2 group-hover:py-2.5"
-          aria-label={resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-        >
-          {resolvedTheme === 'dark' ? <Sun size={16} className="shrink-0" /> : <Moon size={16} className="shrink-0" />}
-          <span className="ml-3 overflow-hidden whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all duration-300 ease-out">
-            {resolvedTheme === 'dark' ? 'Light mode' : 'Dark mode'}
-          </span>
-        </button>
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center justify-center text-sm text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors py-2.5 px-0 group-hover:px-2 group-hover:py-2.5"
-        >
-          <LogOut size={16} className="shrink-0" />
-          <span className="ml-3 overflow-hidden whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all duration-300 ease-out">
-            Sign out
-          </span>
-        </button>
+
+        <Tooltip content={resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}>
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+            className="w-full flex items-center text-sm text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors py-2.5"
+          >
+            <span className="shrink-0 flex items-center justify-center w-8">
+              {resolvedTheme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+            </span>
+            <span className="ml-3 overflow-hidden whitespace-nowrap">
+              {resolvedTheme === 'dark' ? 'Light mode' : 'Dark mode'}
+            </span>
+          </motion.button>
+        </Tooltip>
+
+        <Tooltip content="Sign out">
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={handleLogout}
+            className="w-full flex items-center text-sm text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors py-2.5"
+          >
+            <span className="shrink-0 flex items-center justify-center w-8">
+              <LogOut size={16} />
+            </span>
+            <span className="ml-3 overflow-hidden whitespace-nowrap">Sign out</span>
+          </motion.button>
+        </Tooltip>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Mobile drawer */}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <motion.aside
+            initial={{ x: '-100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '-100%' }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            className="fixed inset-y-0 left-0 z-50 w-56 bg-slate-900 text-white flex flex-col overflow-hidden md:hidden"
+          >
+            {sidebarContent}
+          </motion.aside>
+        )}
+      </AnimatePresence>
+
+      {/* Desktop sidebar */}
+      <motion.aside
+        animate={{ width: 64 }}
+        whileHover={{ width: 208 }}
+        transition={{ duration: 0.3, ease: 'easeOut' }}
+        className="hidden md:flex fixed inset-y-0 left-0 bg-slate-900 text-white flex-col z-40 overflow-hidden"
+      >
+        {sidebarContent}
+      </motion.aside>
+    </>
   );
 }

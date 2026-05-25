@@ -55,16 +55,16 @@ export default function AdminAnnouncements() {
       />
 
       <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="p-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
-            <Bell size={18} className="text-gray-500" />
-            <h2 className="font-semibold text-gray-900">New Announcement</h2>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden dark:bg-gray-900 dark:border-gray-700">
+          <div className="p-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2 dark:border-gray-700 dark:bg-gray-800">
+            <Bell size={18} className="text-gray-500 dark:text-gray-400" />
+            <h2 className="font-semibold text-gray-900 dark:text-gray-100">New Announcement</h2>
           </div>
           
           <form onSubmit={handleSubmit} className="p-6 space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Target Audience (Role)</label>
-              <select value={formData.targetRole} onChange={e => setFormData({...formData, targetRole: e.target.value})} className="w-full border-gray-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 border bg-white">
+              <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Target Audience (Role)</label>
+              <select value={formData.targetRole} onChange={e => setFormData({...formData, targetRole: e.target.value})} className="w-full border-gray-300 rounded-lg p-2.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-blue-500 border bg-white dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600">
                 <option value="">All Users</option>
                 <option value="APPLICANT">Applicants Only</option>
                 <option value="YOUTH_PRESIDENT">Youth Presidents Only</option>
@@ -74,18 +74,18 @@ export default function AdminAnnouncements() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Target Community (Optional)</label>
-              <select value={formData.targetCommunityId} onChange={e => setFormData({...formData, targetCommunityId: e.target.value})} className="w-full border-gray-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 border bg-white">
+              <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Target Community (Optional)</label>
+              <select value={formData.targetCommunityId} onChange={e => setFormData({...formData, targetCommunityId: e.target.value})} className="w-full border-gray-300 rounded-lg p-2.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-blue-500 border bg-white dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600">
                 <option value="">All Communities</option>
                 {communities.map(c => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </select>
-              <p className="text-xs text-gray-500 mt-1">If selected, only users within this community will receive the alert.</p>
+              <p className="text-xs text-gray-500 mt-1 dark:text-gray-400">If selected, only users within this community will receive the alert.</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="announcement-title">Message Title</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300" htmlFor="announcement-title">Message Title</label>
               <input
                 id="announcement-title"
                 required
@@ -93,17 +93,17 @@ export default function AdminAnnouncements() {
                 placeholder="e.g. System Maintenance Notice"
                 value={formData.title}
                 onChange={e => setFormData({ ...formData, title: e.target.value })}
-                className="w-full border-gray-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 border"
+                className="w-full border-gray-300 rounded-lg p-2.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-blue-500 border dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Message Content</label>
-              <textarea required rows={4} placeholder="Type your announcement here..." value={formData.message} onChange={e => setFormData({...formData, message: e.target.value})} className="w-full border-gray-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 border"></textarea>
+              <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Message Content</label>
+              <textarea required aria-required="true" rows={4} placeholder="Type your announcement here..." value={formData.message} onChange={e => setFormData({...formData, message: e.target.value})} className="w-full border-gray-300 rounded-lg p-2.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-blue-500 border dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600"></textarea>
             </div>
 
             <div className="pt-2 flex justify-end">
-              <button disabled={loading} type="submit" className="flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors">
+              <button disabled={loading} aria-busy={loading} type="submit" className="flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                 <Send size={16} /> {loading ? 'Sending...' : 'Broadcast Message'}
               </button>
             </div>

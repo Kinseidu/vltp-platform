@@ -7,6 +7,7 @@ import { StatusBadge } from '@/components/shared/StatusBadge';
 import { NotificationBell } from '@/components/shared/NotificationBell';
 import { BarChart2, Zap, Loader2, ChevronDown, ChevronUp, CheckCircle, XCircle, Info, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
+import { useToast } from '@/components/shared/ToastProvider';
 
 export default function ShortlistingPage() {
   const [user, setUser] = useState<any>(null);
@@ -17,7 +18,7 @@ export default function ShortlistingPage() {
   const [expanded, setExpanded] = useState<number | null>(null);
   const [running, setRunning] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState('');
+  const toast = useToast();
 
   useEffect(() => {
     Promise.all([
@@ -52,7 +53,6 @@ export default function ShortlistingPage() {
   const runShortlist = async () => {
     if (!selectedJob) return;
     setRunning(true);
-    setMessage('');
     setResults([]);
     setSummary(null);
 
@@ -63,13 +63,12 @@ export default function ShortlistingPage() {
       if (data.success) {
         setResults(data.data.shortlist);
         setSummary(data.data.summary);
-        setMessage('AI Shortlist analysis complete');
-        setTimeout(() => setMessage(''), 5000);
+        toast({ title: 'Success', description: 'AI Shortlist analysis complete', variant: 'success' });
       } else {
-        setMessage(data.error || 'Shortlisting failed');
+        toast({ title: 'Error', description: data.error || 'Shortlisting failed', variant: 'error' });
       }
     } catch (err) {
-      setMessage('Network error during AI analysis');
+      toast({ title: 'Error', description: 'Network error during AI analysis', variant: 'error' });
     }
     setRunning(false);
   };
@@ -92,11 +91,11 @@ export default function ShortlistingPage() {
 
   const ScoreBar = ({ label, value }: { label: string; value: number }) => (
     <div className="flex items-center gap-2">
-      <span className="text-xs text-gray-500 w-32 flex-shrink-0">{label}</span>
-      <div className="flex-1 h-1.5 bg-gray-200 rounded-full">
+      <span className="text-xs text-gray-500 dark:text-gray-400 w-32 flex-shrink-0">{label}</span>
+      <div className="flex-1 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full">
         <div className="h-1.5 rounded-full bg-blue-500 transition-all" style={{ width: `${Math.round(value)}%` }} />
       </div>
-      <span className="text-xs font-medium text-gray-700 w-8 text-right">{Math.round(value)}</span>
+      <span className="text-xs font-medium text-gray-700 dark:text-gray-300 w-8 text-right">{Math.round(value)}</span>
     </div>
   );
 
@@ -109,13 +108,13 @@ export default function ShortlistingPage() {
       />
 
       {/* Job selector + run button */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6 flex items-end gap-4 flex-wrap">
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-5 mb-6 flex items-end gap-4 flex-wrap">
         <div className="flex-1 min-w-64">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Select Job</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Select Job</label>
           <select
             value={selectedJob}
             onChange={e => handleJobChange(e.target.value)}
-            className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 bg-white dark:bg-gray-800 dark:text-gray-100"
           >
             <option value="">Choose an open job...</option>
             {jobs.map((j: any) => (
@@ -128,21 +127,17 @@ export default function ShortlistingPage() {
         <button
           onClick={runShortlist}
           disabled={!selectedJob || running}
-          className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium px-5 py-2.5 rounded-lg text-sm transition-colors disabled:opacity-50"
+          className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium px-5 py-2.5 rounded-lg text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {running ? <Loader2 size={15} className="animate-spin" /> : <Zap size={15} />}
           {running ? 'Running AI shortlist...' : 'Run Shortlist'}
         </button>
       </div>
 
-      {message && (
-        <div className={`${message.toLowerCase().includes('failed') || message.toLowerCase().includes('error') ? 'bg-red-50 text-red-700 border-red-200' : 'bg-green-50 text-green-700 border-green-200'} text-sm px-4 py-3 rounded-lg border mb-4 animate-in fade-in slide-in-from-top-1`}>
-          {message}
-        </div>
-      )}
+      {/* removed message */}
 
       {/* AI disclaimer */}
-      <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg p-3 mb-6 text-xs text-amber-800">
+      <div className="flex items-start gap-2 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-lg p-3 mb-6 text-xs text-amber-800 dark:text-amber-300">
         <Info size={14} className="mt-0.5 flex-shrink-0" />
         <span>
           <strong>AI assists, you decide.</strong> Results below are AI recommendations only. Hard eligibility
@@ -154,17 +149,17 @@ export default function ShortlistingPage() {
       {/* Summary strip */}
       {summary && (
         <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-gray-50 rounded-lg border border-gray-200 p-4 text-center">
-            <div className="text-2xl font-bold text-gray-900">{summary.total}</div>
-            <div className="text-xs text-gray-500 mt-1">Total Applicants</div>
+          <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-center">
+            <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{summary.total}</div>
+            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Total Applicants</div>
           </div>
-          <div className="bg-green-50 rounded-lg border border-green-200 p-4 text-center">
-            <div className="text-2xl font-bold text-green-700">{summary.eligible}</div>
-            <div className="text-xs text-gray-500 mt-1">Eligible</div>
+          <div className="bg-green-50 dark:bg-green-900/30 rounded-lg border border-green-200 dark:border-green-800 p-4 text-center">
+            <div className="text-2xl font-bold text-green-700 dark:text-green-300">{summary.eligible}</div>
+            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Eligible</div>
           </div>
-          <div className="bg-red-50 rounded-lg border border-red-200 p-4 text-center">
-            <div className="text-2xl font-bold text-red-600">{summary.ineligible}</div>
-            <div className="text-xs text-gray-500 mt-1">Did Not Pass Filters</div>
+          <div className="bg-red-50 dark:bg-red-900/30 rounded-lg border border-red-200 dark:border-red-800 p-4 text-center">
+            <div className="text-2xl font-bold text-red-600 dark:text-red-400">{summary.ineligible}</div>
+            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Did Not Pass Filters</div>
           </div>
         </div>
       )}
@@ -180,7 +175,7 @@ export default function ShortlistingPage() {
 
       {eligible.length > 0 && (
         <div className="mb-6">
-          <h2 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
             <CheckCircle size={16} className="text-green-500" /> Eligible Applicants — Ranked by AI
           </h2>
           <div className="space-y-3">
@@ -188,43 +183,48 @@ export default function ShortlistingPage() {
               const app = r.application;
               const isOpen = expanded === r.applicationId;
               return (
-                <div key={r.applicationId} className={`bg-white rounded-xl border transition-all ${r.hrOverride ? 'border-amber-300' : 'border-gray-200'}`}>
-                  <div
-                    className="flex items-center gap-4 p-4 cursor-pointer"
-                    onClick={() => setExpanded(isOpen ? null : r.applicationId)}
-                  >
-                    <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-bold flex-shrink-0">
-                      #{idx + 1}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-gray-900">
-                          {app?.applicant?.fullName || r.applicantName}
-                        </span>
-                        {r.hrOverride && (
-                          <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">HR Override</span>
-                        )}
-                      </div>
-                      <div className="text-xs text-gray-500 mt-0.5">
-                        {app?.applicant?.community?.name} · {app?.documents?.length || 0} docs uploaded
-                      </div>
-                    </div>
-                    {/* Score ring */}
-                    <div className="text-center">
-                      <div className={`text-2xl font-bold ${r.matchScore >= 70 ? 'text-green-600' : r.matchScore >= 50 ? 'text-yellow-600' : 'text-red-500'}`}>
-                        {Math.round(r.matchScore)}
-                      </div>
-                      <div className="text-xs text-gray-400">/ 100</div>
-                    </div>
-                    <StatusBadge status={r.eligibilityStatus} size="sm" />
-                    {isOpen ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
+                <div key={r.applicationId} className={`bg-white dark:bg-gray-900 rounded-xl border transition-all ${r.hrOverride ? 'border-amber-300 dark:border-amber-700' : 'border-gray-200 dark:border-gray-700'}`}>
+                <div
+                  role="button"
+                  tabIndex={0}
+                  aria-expanded={isOpen}
+                  aria-controls={`shortlist-content-${r.applicationId}`}
+                  className="flex items-center gap-4 p-4 cursor-pointer"
+                  onClick={() => setExpanded(isOpen ? null : r.applicationId)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setExpanded(isOpen ? null : r.applicationId); } }}
+                >
+                  <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                    #{idx + 1}
                   </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                        {app?.applicant?.fullName || r.applicantName}
+                      </span>
+                      {r.hrOverride && (
+                        <span className="text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full font-medium">HR Override</span>
+                      )}
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                      {app?.applicant?.community?.name} · {app?.documents?.length || 0} docs uploaded
+                    </div>
+                  </div>
+                  {/* Score ring */}
+                  <div className="text-center">
+                    <div className={`text-2xl font-bold ${r.matchScore >= 70 ? 'text-green-600 dark:text-green-400' : r.matchScore >= 50 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-500 dark:text-red-400'}`}>
+                      {Math.round(r.matchScore)}
+                    </div>
+                    <div className="text-xs text-gray-400 dark:text-gray-500">/ 100</div>
+                  </div>
+                  <StatusBadge status={r.eligibilityStatus} size="sm" />
+                  {isOpen ? <ChevronUp size={16} className="text-gray-400 dark:text-gray-500" /> : <ChevronDown size={16} className="text-gray-400 dark:text-gray-500" />}
+                </div>
 
-                  {isOpen && (
-                    <div className="border-t border-gray-100 p-4 space-y-4">
+                {isOpen && (
+                  <div id={`shortlist-content-${r.applicationId}`} role="region" className="border-t border-gray-100 dark:border-gray-700 p-4 space-y-4">
                       {/* Score breakdown */}
                       <div>
-                        <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Score Breakdown</h4>
+                        <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Score Breakdown</h4>
                         <div className="space-y-1.5">
                           <ScoreBar label="Skills match" value={r.skillsMatchScore} />
                           <ScoreBar label="Experience" value={r.experienceScore} />
@@ -236,10 +236,10 @@ export default function ShortlistingPage() {
                       {/* Reasons */}
                       {r.reasons?.length > 0 && (
                         <div>
-                          <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Why this score</h4>
+                          <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Why this score</h4>
                           <ul className="space-y-1">
                             {r.reasons.map((reason: string, i: number) => (
-                              <li key={i} className="text-xs text-gray-600 flex items-start gap-1.5">
+                              <li key={i} className="text-xs text-gray-600 dark:text-gray-400 flex items-start gap-1.5">
                                 <CheckCircle size={12} className="text-green-500 mt-0.5 flex-shrink-0" /> {reason}
                               </li>
                             ))}
@@ -250,10 +250,10 @@ export default function ShortlistingPage() {
                       {/* Missing requirements */}
                       {r.missingRequirements?.length > 0 && (
                         <div>
-                          <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Missing / Gaps</h4>
+                          <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Missing / Gaps</h4>
                           <ul className="space-y-1">
                             {r.missingRequirements.map((m: string, i: number) => (
-                              <li key={i} className="text-xs text-gray-600 flex items-start gap-1.5">
+                              <li key={i} className="text-xs text-gray-600 dark:text-gray-400 flex items-start gap-1.5">
                                 <AlertTriangle size={12} className="text-yellow-500 mt-0.5 flex-shrink-0" /> {m}
                               </li>
                             ))}
@@ -262,7 +262,7 @@ export default function ShortlistingPage() {
                       )}
 
                       {/* Actions */}
-                      <div className="flex gap-2 pt-2 border-t border-gray-100">
+                      <div className="flex gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
                         <Link href={`/hr/applications/${r.applicationId}`}
                           className="text-xs text-blue-600 hover:underline font-medium">
                           View full application →
@@ -291,17 +291,17 @@ export default function ShortlistingPage() {
       {/* Ineligible */}
       {ineligible.length > 0 && (
         <div>
-          <h2 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
             <XCircle size={16} className="text-red-400" /> Did Not Pass Hard Filters
           </h2>
           <div className="space-y-2">
             {ineligible.map((r: any) => (
-              <div key={r.applicationId} className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4">
+              <div key={r.applicationId} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4 flex items-center gap-4">
                 <div className="flex-1">
-                  <span className="text-sm font-medium text-gray-900">
+                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                     {r.application?.applicant?.fullName || r.applicantName}
                   </span>
-                  <div className="text-xs text-gray-500 mt-0.5">
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                     {r.reasons?.join(' · ')}
                   </div>
                 </div>

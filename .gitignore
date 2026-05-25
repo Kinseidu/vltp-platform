@@ -5,7 +5,6 @@ node_modules
 dist
 build
 uploads/
-prisma/migrations
 PROJECT_STATUS.md
 todo.md
 AGENTS.md

@@ -3,6 +3,7 @@
 
 import { prisma } from '@/lib/db/prisma';
 import { NotificationType } from '@prisma/client';
+import { sendNotificationEmail } from './email.service';
 
 interface CreateNotificationParams {
   userId: string;
@@ -27,8 +28,6 @@ export async function createNotification(params: CreateNotificationParams) {
     },
   });
 
-  // Mock external notification (SMS/Email abstraction)
-  // In production: await smsService.send(...) or await emailService.send(...)
   if (process.env.NODE_ENV === 'development') {
     console.log(`[Notification] → ${params.type} to user ${params.userId}: ${params.title}`);
   }
@@ -77,12 +76,19 @@ export async function notifyVerificationUpdate(userId: string, status: string) {
     message: `Your verification status has been updated to: ${status}`,
   };
 
-  return createNotification({
+  const notification = await createNotification({
     userId,
     type: NotificationType.VERIFICATION_UPDATE,
     ...content,
     linkUrl: '/applicant/verification',
   });
+
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (user?.email) {
+    await sendNotificationEmail(user.email, content.title, `<p>${content.message}</p>`);
+  }
+
+  return notification;
 }
 
 /**
@@ -101,12 +107,19 @@ export async function notifyApplicationStatus(userId: string, status: string, jo
     message: `Your application for "${jobTitle}" has been updated.`,
   };
 
-  return createNotification({
+  const notification = await createNotification({
     userId,
     type: NotificationType.APPLICATION_STATUS,
     ...content,
     linkUrl: `/applicant/applications/${applicationId}`,
   });
+
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (user?.email) {
+    await sendNotificationEmail(user.email, content.title, `<p>${content.message}</p>`);
+  }
+
+  return notification;
 }
 
 /**

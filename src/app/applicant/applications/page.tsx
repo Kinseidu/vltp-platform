@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { ClipboardList, Search } from 'lucide-react';
 import { DashboardLayout, EmptyState, PageHeader } from '@/components/shared/DashboardLayout';
 import { StatusBadge } from '@/components/shared/StatusBadge';
-import { AppSpinner } from '@/components/shared/AppSpinner';
+import { SkeletonList } from '@/components/shared/Skeleton';
 import { NotificationBell } from '@/components/shared/NotificationBell';
 
 export default function ApplicantApplicationsPage() {
@@ -28,10 +28,7 @@ export default function ApplicantApplicationsPage() {
   if (loading) {
     return (
       <DashboardLayout role="APPLICANT" userName="" userEmail="">
-        <div className="h-[70vh] flex flex-col items-center justify-center gap-3 text-gray-500">
-          <AppSpinner size="md" />
-          <p className="text-sm">Loading applications...</p>
-        </div>
+        <SkeletonList count={6} />
       </DashboardLayout>
     );
   }
@@ -53,12 +50,12 @@ export default function ApplicantApplicationsPage() {
       <PageHeader title="My Applications" subtitle={`${applications.length} submitted application${applications.length === 1 ? '' : 's'}`} />
 
       <div className="relative mb-6">
-        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Search by job title..."
-          className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:bg-gray-800 dark:text-gray-100"
         />
       </div>
 
@@ -72,7 +69,7 @@ export default function ApplicantApplicationsPage() {
               : 'Try a different job title keyword.'
           }
           action={
-            <Link href="/applicant/jobs" className="inline-flex text-sm font-medium text-blue-600 hover:underline">
+            <Link href="/applicant/jobs" className="inline-flex text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">
               Browse jobs
             </Link>
           }
@@ -83,12 +80,12 @@ export default function ApplicantApplicationsPage() {
             <Link
               key={app.id}
               href={`/applicant/applications/${app.id}`}
-              className="block bg-white rounded-xl border border-gray-200 p-4 hover:border-blue-300 hover:shadow-sm transition-all"
+              className="block bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-sm transition-all"
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <div className="text-sm font-semibold text-gray-900">{app.job?.title || 'Unknown job'}</div>
-                  <div className="text-xs text-gray-500 mt-1">
+                  <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">{app.job?.title || 'Unknown job'}</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     Submitted: {app.submittedAt ? new Date(app.submittedAt).toLocaleDateString() : 'Not submitted'}
                     {' · '}
                     Documents: {app.documents?.length || 0}

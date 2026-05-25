@@ -25,9 +25,13 @@ const ROLE_PATHS: Record<string, string[]> = {
 const PUBLIC_PATHS = [
   '/auth/login',
   '/auth/register',
+  '/auth/forgot-password',
+  '/auth/reset-password',
   '/',
   '/api/auth/login',
   '/api/auth/register',
+  '/api/auth/forgot-password',
+  '/api/auth/reset-password',
   '/api/communities', // Needed for register page to fetch communities
 ];
 

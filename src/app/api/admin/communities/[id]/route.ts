@@ -1,9 +1,9 @@
 // src/app/api/admin/communities/[id]/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db/prisma';
 import { getSession } from '@/lib/auth/jwt';
-import { ok, notFound, forbidden, withErrorHandler } from '@/lib/utils/api';
+import { ok, notFound, forbidden, error, withErrorHandler } from '@/lib/utils/api';
 import { audit } from '@/lib/services/audit.service';
 import { UserRole } from '@prisma/client';
 
@@ -76,10 +76,7 @@ export const DELETE = withErrorHandler(async (req: NextRequest, { params }: { pa
 
   // Prevent deletion if community has applicants
   if (existingCommunity._count.applicantProfiles > 0) {
-    return NextResponse.json(
-      { success: false, error: 'Cannot delete community with active applicants. Move applicants to another community first.' },
-      { status: 400 }
-    );
+    return error('Cannot delete community with active applicants. Move applicants to another community first.', 400);
   }
 
   await prisma.community.update({

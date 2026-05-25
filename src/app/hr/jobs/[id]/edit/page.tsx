@@ -7,6 +7,8 @@ import { DashboardLayout, PageHeader } from '@/components/shared/DashboardLayout
 import { NotificationBell } from '@/components/shared/NotificationBell';
 import { Trash2, Loader2, ChevronLeft, Save } from 'lucide-react';
 import Link from 'next/link';
+import { useToast } from '@/components/shared/ToastProvider';
+import { useUnsavedChanges } from '@/lib/hooks/useUnsavedChanges';
 
 export default function EditJobPage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -17,7 +19,10 @@ export default function EditJobPage({ params }: { params: { id: string } }) {
   const [communities, setCommunities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
+  const toast = useToast();
+
+  const [dirty, setDirty] = useState(false);
+  useUnsavedChanges(dirty);
 
   const [form, setForm] = useState({
     title: '', description: '', scope: '', responsibilities: '',
@@ -65,60 +70,64 @@ export default function EditJobPage({ params }: { params: { id: string } }) {
     });
   }, [jobId]);
 
-  const addRequirement = () =>
+  const addRequirement = () => {
+    setDirty(true);
     setRequirements([...requirements, { skillId: skills[0]?.id || 0, isMandatory: true, minYears: 0 }]);
+  };
 
   const updateReq = (idx: number, field: string, value: any) => {
+    setDirty(true);
     const updated = [...requirements];
     updated[idx] = { ...updated[idx], [field]: value };
     setRequirements(updated);
   };
 
-  const addDocType = () =>
+  const addDocType = () => {
+    setDirty(true);
     setDocTypes([...docTypes, { docType: 'CERTIFICATE', label: '', required: false }]);
+  };
 
   const updateDoc = (idx: number, field: string, value: any) => {
+    setDirty(true);
     const updated = [...docTypes];
     updated[idx] = { ...updated[idx], [field]: value };
     setDocTypes(updated);
   };
 
-  const toggleCommunity = (id: number) =>
+  const toggleCommunity = (id: number) => {
+    setDirty(true);
     setSelectedCommunities(prev => prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (requirements.length === 0) { setError('Add at least one skill requirement'); return; }
-    if (selectedCommunities.length === 0) { setError('Select at least one eligible community'); return; }
-
+    if (requirements.length === 0) { toast({ title: 'Validation Error', description: 'Add at least one skill requirement', variant: 'error' }); return; }
+    if (selectedCommunities.length === 0) { toast({ title: 'Validation Error', description: 'Select at least one eligible community', variant: 'error' }); return; }
     setSaving(true);
-    setError('');
-
     const res = await fetch(`/api/jobs/${jobId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         ...form,
-        minExperience: Number(form.minExperience),
         requirements,
-        eligibleCommunityIds: selectedCommunities,
-        requiredDocTypes: docTypes.filter(d => d.label),
+        eligibleCommunities: selectedCommunities,
+        requiredDocTypes: docTypes.filter(d => d.docType),
       }),
     });
     const data = await res.json();
-
     if (data.success) {
-      router.push('/hr/jobs');
+      setDirty(false);
+      toast({ title: 'Success', description: 'Job updated successfully', variant: 'success' });
     } else {
-      setError(data.error || 'Failed to update job');
-      setSaving(false);
+      toast({ title: 'Error', description: data.error || 'Failed to update job', variant: 'error' });
     }
+    setSaving(false);
   };
 
   if (loading) return <div className="flex items-center justify-center min-h-screen"><Loader2 className="animate-spin text-blue-600" /></div>;
 
   const labelClass = 'block text-sm font-medium text-gray-700 mb-1';
-  const inputClass = 'w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+  const inputClass = 'w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500';
   const textareaClass = `${inputClass} resize-none`;
 
   return (
@@ -131,10 +140,6 @@ export default function EditJobPage({ params }: { params: { id: string } }) {
       </div>
       <PageHeader title="Edit Job Posting" subtitle={`Modifying: ${form.title}`} />
 
-      {error && (
-        <div className="bg-red-50 text-red-700 text-sm px-4 py-3 rounded-lg border border-red-200 mb-6">{error}</div>
-      )}
-
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic info */}
         <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4 shadow-sm">
@@ -143,23 +148,23 @@ export default function EditJobPage({ params }: { params: { id: string } }) {
           </h2>
           <div>
             <label className={labelClass}>Job Title *</label>
-            <input type="text" required value={form.title} onChange={e => setForm({ ...form, title: e.target.value })}
+            <input type="text" required value={form.title} onChange={e => { setDirty(true); setForm({ ...form, title: e.target.value }); }}
               className={inputClass} placeholder="e.g. Underground Mine Operator" />
           </div>
           <div>
             <label className={labelClass}>Job Description *</label>
-            <textarea required rows={3} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
+            <textarea required aria-required="true" rows={3} value={form.description} onChange={e => { setDirty(true); setForm({ ...form, description: e.target.value }); }}
               className={textareaClass} placeholder="Overview of the role..." />
           </div>
           <div className="grid md:grid-cols-2 gap-4">
             <div>
               <label className={labelClass}>Scope of Work *</label>
-              <textarea required rows={4} value={form.scope} onChange={e => setForm({ ...form, scope: e.target.value })}
+              <textarea required aria-required="true" rows={4} value={form.scope} onChange={e => { setDirty(true); setForm({ ...form, scope: e.target.value }); }}
                 className={textareaClass} />
             </div>
             <div>
               <label className={labelClass}>Responsibilities *</label>
-              <textarea required rows={4} value={form.responsibilities} onChange={e => setForm({ ...form, responsibilities: e.target.value })}
+              <textarea required aria-required="true" rows={4} value={form.responsibilities} onChange={e => { setDirty(true); setForm({ ...form, responsibilities: e.target.value }); }}
                 className={textareaClass} />
             </div>
           </div>
@@ -167,18 +172,18 @@ export default function EditJobPage({ params }: { params: { id: string } }) {
             <div>
               <label className={labelClass}>Min. Experience (years) *</label>
               <input type="number" min={0} max={40} required value={form.minExperience}
-                onChange={e => setForm({ ...form, minExperience: parseInt(e.target.value) || 0 })}
+                onChange={e => { setDirty(true); setForm({ ...form, minExperience: parseInt(e.target.value) || 0 }); }}
                 className={inputClass} />
             </div>
             <div>
               <label className={labelClass}>Application Deadline</label>
               <input type="date" value={form.applicationDeadline}
-                onChange={e => setForm({ ...form, applicationDeadline: e.target.value })}
+                onChange={e => { setDirty(true); setForm({ ...form, applicationDeadline: e.target.value }); }}
                 className={inputClass} />
             </div>
             <div>
               <label className={labelClass}>Job Status</label>
-              <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}
+              <select value={form.status} onChange={e => { setDirty(true); setForm({ ...form, status: e.target.value }); }}
                 className={`${inputClass} bg-white font-medium`}>
                 <option value="DRAFT">Draft (Internal Only)</option>
                 <option value="OPEN">Open (Live & Matching)</option>
@@ -202,7 +207,7 @@ export default function EditJobPage({ params }: { params: { id: string } }) {
             {requirements.map((req, idx) => (
               <div key={idx} className="flex flex-wrap md:flex-nowrap items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-100">
                 <select value={req.skillId} onChange={e => updateReq(idx, 'skillId', parseInt(e.target.value))}
-                  className="flex-1 min-w-[200px] px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white outline-none focus:ring-2 focus:ring-blue-500">
+                  className="flex-1 min-w-[200px] px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
                   {skills.map(s => <option key={s.id} value={s.id}>{s.name} ({s.category})</option>)}
                 </select>
                 <div className="flex items-center gap-2">
@@ -216,7 +221,7 @@ export default function EditJobPage({ params }: { params: { id: string } }) {
                     onChange={e => updateReq(idx, 'isMandatory', e.target.checked)} className="rounded text-blue-600" />
                   Mandatory
                 </label>
-                <button type="button" onClick={() => setRequirements(requirements.filter((_, i) => i !== idx))}
+                <button type="button" onClick={() => { setDirty(true); setRequirements(requirements.filter((_, i) => i !== idx)); }}
                   className="text-red-400 hover:text-red-600 p-1 ml-auto">
                   <Trash2 size={16} />
                 </button>
@@ -276,7 +281,7 @@ export default function EditJobPage({ params }: { params: { id: string } }) {
                     onChange={e => updateDoc(idx, 'required', e.target.checked)} className="rounded text-blue-600" />
                   Required
                 </label>
-                <button type="button" onClick={() => setDocTypes(docTypes.filter((_, i) => i !== idx))}
+                <button type="button" onClick={() => { setDirty(true); setDocTypes(docTypes.filter((_, i) => i !== idx)); }}
                   className="text-red-400 hover:text-red-600 p-1 ml-auto">
                   <Trash2 size={16} />
                 </button>
@@ -291,8 +296,8 @@ export default function EditJobPage({ params }: { params: { id: string } }) {
             className="px-6 py-2.5 border border-gray-200 text-gray-600 rounded-xl text-sm font-bold hover:bg-gray-50 transition-colors">
             Cancel
           </Link>
-          <button type="submit" disabled={saving}
-            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-2.5 rounded-xl text-sm transition-all shadow-md hover:shadow-lg disabled:opacity-50">
+          <button type="submit" disabled={saving} aria-busy={saving}
+            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-2.5 rounded-xl text-sm transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
             {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
             {saving ? 'Saving Changes...' : 'Save Updates'}
           </button>

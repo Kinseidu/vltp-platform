@@ -61,26 +61,26 @@ export default function AdminYouthPresidents() {
 
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Left Column: List of communities and their current assignments */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
-            <h2 className="font-semibold text-gray-900">Community Assignments</h2>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden dark:bg-gray-900 dark:border-gray-700">
+          <div className="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center dark:border-gray-700 dark:bg-gray-800">
+            <h2 className="font-semibold text-gray-900 dark:text-gray-100">Community Assignments</h2>
           </div>
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-gray-100 dark:divide-gray-700">
             {loading ? (
-              <div className="p-8 text-center text-gray-500">Loading...</div>
+              <div className="p-8 text-center text-gray-500 dark:text-gray-400">Loading...</div>
             ) : communities.map(c => (
-              <div key={c.id} className="p-5 hover:bg-gray-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div key={c.id} className="p-5 hover:bg-gray-50 dark:hover:bg-gray-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <div className="font-semibold text-gray-900 flex items-center gap-2">
+                  <div className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
                     <MapPin size={16} className="text-blue-600" /> {c.name}
                   </div>
-                  <div className="text-sm text-gray-500 mt-1">{c.region}</div>
+                  <div className="text-sm text-gray-500 mt-1 dark:text-gray-400">{c.region}</div>
                 </div>
                 
                 <div className="w-full sm:w-64">
-                  <label className="text-xs font-medium text-gray-500 mb-1 block">Assigned Youth President</label>
+                  <label className="text-xs font-medium text-gray-500 mb-1 block dark:text-gray-400">Assigned Youth President</label>
                   <select
-                    className="w-full border-gray-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 border bg-white"
+                    className="w-full border-gray-300 rounded-lg p-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-blue-500 border bg-white dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600"
                     value={c.youthPresidentId || ''}
                     onChange={(e) => handleAssign(c.id, e.target.value)}
                   >
@@ -97,19 +97,19 @@ export default function AdminYouthPresidents() {
 
         {/* Right Column: Explainer */}
         <div>
-          <div className="bg-blue-50 rounded-xl border border-blue-100 p-6">
-            <h3 className="font-bold text-blue-900 mb-2 flex items-center gap-2">
+          <div className="bg-blue-50 rounded-xl border border-blue-100 p-6 dark:bg-blue-900/20 dark:border-blue-800">
+            <h3 className="font-bold text-blue-900 mb-2 flex items-center gap-2 dark:text-blue-100">
               <User size={18} /> How Assignments Work
             </h3>
-            <p className="text-sm text-blue-800 leading-relaxed mb-4">
+            <p className="text-sm text-blue-800 leading-relaxed mb-4 dark:text-blue-200">
               Youth Presidents act as the first line of defense in verifying local talent. 
               By assigning a Youth President to a community, you grant them access to the Verification Queue for all applicants claiming residency in that community.
             </p>
-            <ul className="text-sm text-blue-800 space-y-2 list-disc pl-4">
+            <ul className="text-sm text-blue-800 space-y-2 list-disc pl-4 dark:text-blue-200">
               <li>A community can have at most ONE active Youth President.</li>
               <li>A Youth President can be assigned to at most ONE community.</li>
               <li>If you re-assign a Youth President, their previous queue access is revoked instantly.</li>
-              <li>Only users with the <span className="font-mono text-xs bg-blue-200 px-1 rounded">YOUTH_PRESIDENT</span> role appear in the dropdown.</li>
+              <li>Only users with the <span className="font-mono text-xs bg-blue-200 px-1 rounded dark:bg-blue-900/40">YOUTH_PRESIDENT</span> role appear in the dropdown.</li>
             </ul>
           </div>
         </div>

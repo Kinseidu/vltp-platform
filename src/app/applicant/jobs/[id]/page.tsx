@@ -5,11 +5,12 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { DashboardLayout } from '@/components/shared/DashboardLayout';
 import { StatusBadge } from '@/components/shared/StatusBadge';
-import { AppSpinner } from '@/components/shared/AppSpinner';
+import { SkeletonForm } from '@/components/shared/Skeleton';
 import { NotificationBell } from '@/components/shared/NotificationBell';
 import { ChevronLeft, Upload, FileText, Loader2, CheckCircle, AlertCircle, Trash2, ExternalLink, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import Link from 'next/link';
+import { useToast } from '@/components/shared/ToastProvider';
 
 export default function JobDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -25,8 +26,8 @@ export default function JobDetailPage() {
   const [uploadedDocs, setUploadedDocs] = useState<Record<number, File>>({});
   const [uploading, setUploading] = useState(false);
   const [step, setStep] = useState<'view' | 'apply' | 'documents' | 'done'>('view');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const toast = useToast();
 
   useEffect(() => {
     Promise.all([
@@ -65,7 +66,6 @@ export default function JobDetailPage() {
 
   const submitApplication = async () => {
     setApplying(true);
-    setError('');
     const res = await fetch('/api/applications', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -76,7 +76,7 @@ export default function JobDetailPage() {
       setApplicationId(data.data.application.id);
       setStep('documents');
     } else {
-      setError(data.error || 'Application failed');
+      toast({ title: 'Error', description: data.error || 'Application failed', variant: 'error' });
     }
     setApplying(false);
   };
@@ -110,7 +110,7 @@ export default function JobDetailPage() {
     if (data.success) {
       await fetchServerDocs(applicationId);
     } else {
-      setError(data.error || 'Failed to delete document');
+      toast({ title: 'Error', description: data.error || 'Failed to delete document', variant: 'error' });
     }
     setUploading(false);
   };
@@ -129,7 +129,7 @@ export default function JobDetailPage() {
       setUploadedDocs({}); // Clear local state after successful upload
       setStep('done');
     } catch (err: any) {
-      setError(err.message || 'Some documents failed to upload. Please try again.');
+      toast({ title: 'Error', description: err.message || 'Some documents failed to upload. Please try again.', variant: 'error' });
     }
     setUploading(false);
   };
@@ -137,10 +137,7 @@ export default function JobDetailPage() {
   if (loading) {
     return (
       <DashboardLayout role="APPLICANT" userName="" userEmail="">
-        <div className="h-[70vh] flex flex-col items-center justify-center gap-3 text-gray-500">
-          <AppSpinner size="md" />
-          <p className="text-sm">Loading job...</p>
-        </div>
+        <SkeletonForm />
       </DashboardLayout>
     );
   }
@@ -191,13 +188,6 @@ export default function JobDetailPage() {
             <p className="font-bold text-sm">Application Deadline Reached</p>
             <p className="text-xs opacity-80">The deadline for this job has passed. You can no longer modify your application or documents.</p>
           </div>
-        </div>
-      )}
-
-      {error && (
-        <div className="bg-red-50 text-red-700 text-sm px-4 py-3 rounded-xl border border-red-200 mb-6 flex justify-between items-center">
-          <span>{error}</span>
-          <button onClick={() => setError('')} className="font-bold">&times;</button>
         </div>
       )}
 
@@ -320,12 +310,12 @@ export default function JobDetailPage() {
                   value={coverNote}
                   onChange={e => setCoverNote(e.target.value)}
                   placeholder="Tell HR about your relevant experience..."
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none bg-gray-50/50"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 resize-none bg-gray-50/50"
                 />
                 <button
                   onClick={submitApplication}
                   disabled={applying}
-                  className="w-full inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl text-sm shadow-md disabled:opacity-50"
+                  className="w-full inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl text-sm shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {applying && <Loader2 size={16} className="animate-spin" />}
                   {applying ? 'Submitting...' : 'Continue to Documents'}
@@ -405,7 +395,8 @@ export default function JobDetailPage() {
                   <button
                     onClick={submitAllDocuments}
                     disabled={uploading || Object.keys(uploadedDocs).length === 0}
-                    className="w-full inline-flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl text-sm shadow-md transition-all disabled:opacity-50"
+                    aria-busy={uploading}
+                    className="w-full inline-flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl text-sm shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {uploading && <Loader2 size={16} className="animate-spin" />}
                     {uploading ? 'Processing...' : 'Upload & Save Changes'}
@@ -416,7 +407,7 @@ export default function JobDetailPage() {
                   onClick={() => setStep('done')}
                   className="w-full text-center text-xs font-bold text-gray-400 hover:text-gray-600 transition-colors uppercase tracking-widest pt-2"
                 >
-                  I'm done for now
+                  I&apos;m done for now
                 </button>
               </div>
             )}

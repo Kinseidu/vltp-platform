@@ -16,6 +16,7 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   UNDER_REVIEW:     { label: 'Under Review',      className: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
   SHORTLISTED:      { label: 'Shortlisted',       className: 'bg-purple-100 text-purple-800 border-purple-200' },
   INVITED_FOR_INTERVIEW: { label: 'Interview Invited', className: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
+  HIRED:                { label: 'Hired ✓',           className: 'bg-green-200 text-green-900 border-green-300' },
   // Jobs
   OPEN:    { label: 'Open',   className: 'bg-green-100 text-green-800 border-green-200' },
   CLOSED:  { label: 'Closed', className: 'bg-gray-100 text-gray-700 border-gray-200' },

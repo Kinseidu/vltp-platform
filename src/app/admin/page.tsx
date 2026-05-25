@@ -64,54 +64,54 @@ export default function AdminDashboard() {
       <div className="grid lg:grid-cols-3 gap-6">
         
         {/* Recent audit logs */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden lg:col-span-2">
-          <div className="p-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
-            <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
-              <Activity size={18} className="text-gray-400" /> Recent Activity Feed
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden lg:col-span-2 dark:bg-gray-900 dark:border-gray-700">
+          <div className="p-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between dark:border-gray-700 dark:bg-gray-800">
+            <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2 dark:text-gray-100">
+              <Activity size={18} className="text-gray-400 dark:text-gray-500" /> Recent Activity Feed
             </h2>
             <Link href="/admin/audit-logs" className="text-xs font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1">
               View all <ArrowRight size={12} />
             </Link>
           </div>
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-gray-100 dark:divide-gray-700">
             {auditLogs.map((log: any) => (
-              <div key={log.id} className="p-4 flex gap-4 hover:bg-gray-50">
-                <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
+              <div key={log.id} className="p-4 flex gap-4 hover:bg-gray-50 dark:hover:bg-gray-800">
+                <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0 dark:bg-blue-900/30">
                   <FileText size={14} className="text-blue-600" />
                 </div>
                 <div>
-                  <div className="text-sm font-medium text-gray-900">
-                    <span className="font-mono text-xs bg-gray-100 px-1 rounded text-gray-600 mr-2">{log.action}</span>
+                  <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                    <span className="font-mono text-xs bg-gray-100 px-1 rounded text-gray-600 mr-2 dark:text-gray-400">{log.action}</span>
                     by {log.actor?.email}
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">
+                  <div className="text-xs text-gray-500 mt-1 dark:text-gray-400">
                     {log.entity} #{log.entityId} • {format(new Date(log.createdAt), 'dd MMM HH:mm')}
                   </div>
                 </div>
               </div>
             ))}
             {auditLogs.length === 0 && (
-              <div className="p-8 text-center text-xs text-gray-400">No activity recorded yet.</div>
+              <div className="p-8 text-center text-xs text-gray-400 dark:text-gray-500">No activity recorded yet.</div>
             )}
           </div>
         </div>
 
         {/* Quick Links */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="p-4 border-b border-gray-100 bg-gray-50">
-            <h2 className="text-base font-semibold text-gray-900">Quick Actions</h2>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden dark:bg-gray-900 dark:border-gray-700">
+          <div className="p-4 border-b border-gray-100 bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
+            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Quick Actions</h2>
           </div>
           <div className="p-2 flex flex-col gap-1">
-            <Link href="/admin/users" className="flex items-center gap-3 p-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors">
+            <Link href="/admin/users" className="flex items-center gap-3 p-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors dark:text-gray-300 dark:hover:bg-blue-900/30">
               <Users size={16} /> Manage Users
             </Link>
-            <Link href="/admin/roles" className="flex items-center gap-3 p-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors">
+            <Link href="/admin/roles" className="flex items-center gap-3 p-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors dark:text-gray-300 dark:hover:bg-blue-900/30">
               <Shield size={16} /> Assign Roles
             </Link>
-            <Link href="/admin/communities" className="flex items-center gap-3 p-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors">
+            <Link href="/admin/communities" className="flex items-center gap-3 p-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors dark:text-gray-300 dark:hover:bg-blue-900/30">
               <MapPinIcon size={16} /> Manage Communities
             </Link>
-            <Link href="/admin/announcements" className="flex items-center gap-3 p-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors">
+            <Link href="/admin/announcements" className="flex items-center gap-3 p-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors dark:text-gray-300 dark:hover:bg-blue-900/30">
               <BellIcon size={16} /> Broadcast Announcement
             </Link>
           </div>

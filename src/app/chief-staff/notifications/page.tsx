@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Bell, CheckCheck, ChevronRight } from 'lucide-react';
 import { DashboardLayout, EmptyState, PageHeader } from '@/components/shared/DashboardLayout';
 import { NotificationBell } from '@/components/shared/NotificationBell';
-import { AppSpinner } from '@/components/shared/AppSpinner';
+import { SkeletonList } from '@/components/shared/Skeleton';
 import Link from 'next/link';
 
 export default function ChiefStaffNotificationsPage() {
@@ -58,10 +58,7 @@ export default function ChiefStaffNotificationsPage() {
   if (loading) {
     return (
       <DashboardLayout role="CHIEF_STAFF" userName="" userEmail="">
-        <div className="h-[70vh] flex flex-col items-center justify-center gap-3 text-gray-500">
-          <AppSpinner size="md" />
-          <p className="text-sm">Loading notifications...</p>
-        </div>
+        <SkeletonList count={6} />
       </DashboardLayout>
     );
   }
@@ -82,7 +79,7 @@ export default function ChiefStaffNotificationsPage() {
             <button
               onClick={markAllRead}
               disabled={marking}
-              className="inline-flex items-center gap-2 border border-gray-300 bg-white hover:bg-gray-50 text-sm text-gray-700 font-medium px-3 py-2 rounded-lg disabled:opacity-50"
+              className="inline-flex items-center gap-2 border border-gray-300 bg-white hover:bg-gray-50 text-sm text-gray-700 font-medium px-3 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <CheckCheck size={14} />
               {marking ? 'Marking...' : 'Mark all read'}

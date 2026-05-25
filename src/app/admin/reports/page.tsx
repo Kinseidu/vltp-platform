@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { DashboardLayout, PageHeader, StatCard } from '@/components/shared/DashboardLayout';
 import { NotificationBell } from '@/components/shared/NotificationBell';
+import { SkeletonStatCard } from '@/components/shared/Skeleton';
 import { BarChart2, PieChart, Users, FileText, CheckCircle, TrendingUp } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -61,7 +62,19 @@ export default function AdminReports() {
       <DashboardLayout role="ADMIN" userName="Admin" userEmail="admin@example.com">
         <NotificationBell role="ADMIN" />
         <PageHeader title="Reports & Analytics" subtitle="Platform usage, verification rates, and system analytics." />
-        <div className="py-12 text-center text-gray-500 dark:text-gray-400">Loading analytics...</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          {Array.from({ length: 4 }).map((_, i) => <SkeletonStatCard key={i} />)}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6">
+              <div className="animate-pulse space-y-4">
+                <div className="h-5 w-40 bg-gray-200 dark:bg-gray-800 rounded" />
+                <div className="h-64 bg-gray-200 dark:bg-gray-800 rounded-lg" />
+              </div>
+            </div>
+          ))}
+        </div>
       </DashboardLayout>
     );
   }
@@ -144,6 +157,21 @@ export default function AdminReports() {
           <StatCard label="Active Jobs" value={data?.overview?.totalJobs || 0} icon={<FileText size={18} />} colour="purple" />
           <StatCard label="Applications" value={data?.overview?.totalApplications || 0} icon={<CheckCircle size={18} />} colour="green" />
           <StatCard label="Verified Locals" value={verifiedCount} icon={<CheckCircle size={18} />} colour="yellow" />
+        </div>
+
+        <div className="flex items-center gap-3 flex-wrap">
+          <a
+            href="/api/admin/export?type=applicants"
+            className="inline-flex items-center gap-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-sm px-4 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+          >
+            <TrendingUp size={14} /> Export Applicants CSV
+          </a>
+          <a
+            href="/api/admin/export?type=applications"
+            className="inline-flex items-center gap-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-sm px-4 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+          >
+            <FileText size={14} /> Export Applications CSV
+          </a>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">

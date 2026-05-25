@@ -30,7 +30,7 @@ export default function YouthPresidentDashboardPage() {
   if (loading) {
     return (
       <DashboardLayout role="YOUTH_PRESIDENT" userName="" userEmail="">
-        <div className="h-[70vh] flex flex-col items-center justify-center gap-3 text-gray-500">
+        <div className="h-[70vh] flex flex-col items-center justify-center gap-3 text-gray-500 dark:text-gray-400">
           <AppSpinner size="md" />
           <p className="text-sm">Loading dashboard...</p>
         </div>
@@ -70,9 +70,9 @@ export default function YouthPresidentDashboardPage() {
           message="All current requests have been reviewed."
         />
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <h3 className="text-base font-semibold text-gray-900 mb-2">Review verification queue</h3>
-          <p className="text-sm text-gray-500 mb-4">
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">Review verification queue</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
             You have {pending.length} pending applicant request{pending.length === 1 ? '' : 's'} in {community.name}.
           </p>
           <Link

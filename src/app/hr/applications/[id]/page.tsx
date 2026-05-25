@@ -12,9 +12,10 @@ import {
 } from 'lucide-react';
 import { AppSpinner } from '@/components/shared/AppSpinner';
 import Link from 'next/link';
+import { useToast } from '@/components/shared/ToastProvider';
 
 const STATUS_OPTIONS = [
-  'SUBMITTED', 'UNDER_REVIEW', 'SHORTLISTED', 'REJECTED', 'INVITED_FOR_INTERVIEW'
+  'SUBMITTED', 'UNDER_REVIEW', 'SHORTLISTED', 'REJECTED', 'INVITED_FOR_INTERVIEW', 'HIRED'
 ];
 
 const Q_TYPES = ['TECHNICAL', 'EXPERIENTIAL', 'SAFETY_COMPLIANCE', 'SCENARIO_BASED'];
@@ -37,12 +38,7 @@ export default function HRApplicationDetailPage() {
   const [editingPack, setEditingPack] = useState(false);
   const [editedQuestions, setEditedQuestions] = useState<any[]>([]);
   const [savingPack, setSavingPack] = useState(false);
-  const [message, setMessage] = useState('');
-
-  useEffect(() => {
-    fetch('/api/auth/me').then(r => r.json()).then(d => d.success && setUser(d.data.user));
-    fetchApplication();
-  }, [id]);
+  const toast = useToast();
 
   const fetchApplication = async () => {
     const res = await fetch(`/api/applications/${id}`);
@@ -58,20 +54,17 @@ export default function HRApplicationDetailPage() {
 
   const generateQuestions = async () => {
     setGeneratingQ(true);
-    setMessage('');
     try {
       const res = await fetch(`/api/ai/interview-questions/${id}`, { method: 'POST' });
       const data = await res.json();
       if (data.success) {
         setPack(data.data.pack);
-        setMessage('Interview questions ' + (pack ? 'regenerated' : 'generated') + ' successfully');
-        // Clear message after 3 seconds
-        setTimeout(() => setMessage(''), 3000);
+        toast({ title: 'Success', description: 'Interview questions ' + (pack ? 'regenerated' : 'generated') + ' successfully', variant: 'success' });
       } else {
-        setMessage(data.error || 'Failed to generate questions');
+        toast({ title: 'Error', description: data.error || 'Failed to generate questions', variant: 'error' });
       }
     } catch (err) {
-      setMessage('Network error while generating questions');
+      toast({ title: 'Error', description: 'Network error while generating questions', variant: 'error' });
     }
     setGeneratingQ(false);
   };
@@ -159,18 +152,14 @@ export default function HRApplicationDetailPage() {
             value={application.status}
             onChange={e => updateStatus(e.target.value)}
             disabled={updatingStatus}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>)}
           </select>
         </div>
       </div>
 
-      {message && (
-        <div className={`${message.toLowerCase().includes('failed') || message.toLowerCase().includes('error') ? 'bg-red-50 text-red-700 border-red-200' : 'bg-green-50 text-green-700 border-green-200'} text-sm px-4 py-3 rounded-lg border mb-4 animate-in fade-in slide-in-from-top-1`}>
-          {message}
-        </div>
-      )}
+      {/* removed message */}
 
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Left column: applicant info */}
@@ -292,7 +281,7 @@ export default function HRApplicationDetailPage() {
                         <Edit2 size={13} /> Edit
                       </button>
                     ) : (
-                      <button onClick={savePack} disabled={savingPack}
+                      <button onClick={savePack} disabled={savingPack} aria-busy={savingPack}
                         className="inline-flex items-center gap-1.5 text-sm text-white bg-green-600 hover:bg-green-700 px-3 py-1.5 rounded-lg">
                         {savingPack && <Loader2 size={13} className="animate-spin" />}
                         Save
@@ -307,7 +296,8 @@ export default function HRApplicationDetailPage() {
                 <button
                   onClick={generateQuestions}
                   disabled={generatingQ}
-                  className="inline-flex items-center gap-1.5 text-sm text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg disabled:opacity-50"
+                  aria-busy={generatingQ}
+                  className="inline-flex items-center gap-1.5 text-sm text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {generatingQ ? <Loader2 size={13} className="animate-spin" /> : <Zap size={13} />}
                   {pack ? 'Regenerate' : 'Generate Questions'}
@@ -318,7 +308,7 @@ export default function HRApplicationDetailPage() {
             {!pack && !generatingQ && (
               <div className="text-center py-12 text-gray-400">
                 <Zap size={32} className="mx-auto mb-3 text-gray-300" />
-                <p className="text-sm">Click "Generate Questions" to create an AI-powered interview pack for this applicant.</p>
+                <p className="text-sm">Click &quot;Generate Questions&quot; to create an AI-powered interview pack for this applicant.</p>
               </div>
             )}
 
@@ -402,7 +392,7 @@ export default function HRApplicationDetailPage() {
                   <button onClick={() => setEditingPack(false)} className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-600 hover:bg-gray-50">
                     Cancel
                   </button>
-                  <button onClick={savePack} disabled={savingPack}
+                  <button onClick={savePack} disabled={savingPack} aria-busy={savingPack}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium">
                     {savingPack && <Loader2 size={14} className="animate-spin" />}
                     Save Changes

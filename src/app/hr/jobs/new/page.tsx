@@ -7,6 +7,8 @@ import { DashboardLayout, PageHeader } from '@/components/shared/DashboardLayout
 import { NotificationBell } from '@/components/shared/NotificationBell';
 import { Plus, Trash2, Loader2, ChevronLeft } from 'lucide-react';
 import Link from 'next/link';
+import { useToast } from '@/components/shared/ToastProvider';
+import { useUnsavedChanges } from '@/lib/hooks/useUnsavedChanges';
 
 export default function NewJobPage() {
   const router = useRouter();
@@ -14,7 +16,10 @@ export default function NewJobPage() {
   const [skills, setSkills] = useState<any[]>([]);
   const [communities, setCommunities] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const toast = useToast();
+
+  const [dirty, setDirty] = useState(false);
+  useUnsavedChanges(dirty);
 
   const [form, setForm] = useState({
     title: '', description: '', scope: '', responsibilities: '',
@@ -38,70 +43,68 @@ export default function NewJobPage() {
     });
   }, []);
 
-  const addRequirement = () =>
+  const addRequirement = () => {
+    setDirty(true);
     setRequirements([...requirements, { skillId: skills[0]?.id || 0, isMandatory: true, minYears: 0 }]);
+  };
 
   const updateReq = (idx: number, field: string, value: any) => {
+    setDirty(true);
     const updated = [...requirements];
     updated[idx] = { ...updated[idx], [field]: value };
     setRequirements(updated);
   };
 
-  const addDocType = () =>
+  const addDocType = () => {
+    setDirty(true);
     setDocTypes([...docTypes, { docType: 'CERTIFICATE', label: '', required: false }]);
+  };
 
   const updateDoc = (idx: number, field: string, value: any) => {
+    setDirty(true);
     const updated = [...docTypes];
     updated[idx] = { ...updated[idx], [field]: value };
     setDocTypes(updated);
   };
 
-  const toggleCommunity = (id: number) =>
+  const toggleCommunity = (id: number) => {
+    setDirty(true);
     setSelectedCommunities(prev => prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (requirements.length === 0) { setError('Add at least one skill requirement'); return; }
-    if (selectedCommunities.length === 0) { setError('Select at least one eligible community'); return; }
-
+    if (requirements.length === 0) { toast({ title: 'Validation Error', description: 'Add at least one skill requirement', variant: 'error' }); return; }
+    if (selectedCommunities.length === 0) { toast({ title: 'Validation Error', description: 'Select at least one eligible community', variant: 'error' }); return; }
     setLoading(true);
-    setError('');
-
     const res = await fetch('/api/jobs', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         ...form,
-        minExperience: Number(form.minExperience),
         requirements,
-        eligibleCommunityIds: selectedCommunities,
-        requiredDocTypes: docTypes.filter(d => d.label),
+        eligibleCommunities: selectedCommunities,
+        requiredDocTypes: docTypes.filter(d => d.docType),
       }),
     });
     const data = await res.json();
-
     if (data.success) {
+      setDirty(false);
       router.push('/hr/jobs');
     } else {
-      if (data.details && typeof data.details === 'object') {
-        const firstDetail = Object.entries(data.details).find(
-          ([, messages]) => Array.isArray(messages) && messages.length > 0
-        ) as [string, string[]] | undefined;
-
-        if (firstDetail) {
-          setError(`${firstDetail[0]}: ${firstDetail[1][0]}`);
-        } else {
-          setError(data.error || 'Validation failed');
-        }
+      if (data.errors) {
+        const firstKey = Object.keys(data.errors)[0];
+        const firstDetail = data.errors[firstKey];
+        toast({ title: 'Validation Error', description: `${firstKey}: ${firstDetail[0]}`, variant: 'error' });
       } else {
-        setError(data.error || 'Failed to create job');
+        toast({ title: 'Error', description: data.error || 'Failed to create job', variant: 'error' });
       }
-      setLoading(false);
     }
+    setLoading(false);
   };
 
   const labelClass = 'block text-sm font-medium text-gray-700 mb-1';
-  const inputClass = 'w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+  const inputClass = 'w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500';
   const textareaClass = `${inputClass} resize-none`;
 
   return (
@@ -114,50 +117,46 @@ export default function NewJobPage() {
       </div>
       <PageHeader title="Post New Job" subtitle="Define requirements, eligible communities, and required documents" />
 
-      {error && (
-        <div className="bg-red-50 text-red-700 text-sm px-4 py-3 rounded-lg border border-red-200 mb-6">{error}</div>
-      )}
-
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic info */}
         <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
           <h2 className="text-base font-semibold text-gray-900">Basic Information</h2>
           <div>
             <label className={labelClass}>Job Title *</label>
-            <input type="text" required value={form.title} onChange={e => setForm({ ...form, title: e.target.value })}
+            <input type="text" required value={form.title} onChange={e => { setDirty(true); setForm({ ...form, title: e.target.value }); }}
               className={inputClass} placeholder="e.g. Underground Mine Operator" />
           </div>
           <div>
             <label className={labelClass}>Job Description *</label>
-            <textarea required rows={3} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
+            <textarea required aria-required="true" rows={3} value={form.description} onChange={e => { setDirty(true); setForm({ ...form, description: e.target.value }); }}
               className={textareaClass} placeholder="Overview of the role and its purpose..." />
           </div>
           <div>
             <label className={labelClass}>Scope of Work *</label>
-            <textarea required rows={3} value={form.scope} onChange={e => setForm({ ...form, scope: e.target.value })}
+            <textarea required aria-required="true" rows={3} value={form.scope} onChange={e => { setDirty(true); setForm({ ...form, scope: e.target.value }); }}
               className={textareaClass} placeholder="Detailed scope of day-to-day activities..." />
           </div>
           <div>
             <label className={labelClass}>Responsibilities *</label>
-            <textarea required rows={3} value={form.responsibilities} onChange={e => setForm({ ...form, responsibilities: e.target.value })}
+            <textarea required aria-required="true" rows={3} value={form.responsibilities} onChange={e => { setDirty(true); setForm({ ...form, responsibilities: e.target.value }); }}
               className={textareaClass} placeholder="Key duties and responsibilities..." />
           </div>
           <div className="grid grid-cols-3 gap-4">
             <div>
               <label className={labelClass}>Min. Experience (years) *</label>
               <input type="number" min={0} max={40} required value={form.minExperience}
-                onChange={e => setForm({ ...form, minExperience: parseInt(e.target.value) || 0 })}
+                onChange={e => { setDirty(true); setForm({ ...form, minExperience: parseInt(e.target.value) || 0 }); }}
                 className={inputClass} />
             </div>
             <div>
               <label className={labelClass}>Application Deadline</label>
               <input type="date" value={form.applicationDeadline}
-                onChange={e => setForm({ ...form, applicationDeadline: e.target.value })}
+                onChange={e => { setDirty(true); setForm({ ...form, applicationDeadline: e.target.value }); }}
                 className={inputClass} />
             </div>
             <div>
               <label className={labelClass}>Publish Status</label>
-              <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}
+              <select value={form.status} onChange={e => { setDirty(true); setForm({ ...form, status: e.target.value }); }}
                 className={`${inputClass} bg-white`}>
                 <option value="DRAFT">Save as Draft</option>
                 <option value="OPEN">Publish (Open)</option>
@@ -176,18 +175,18 @@ export default function NewJobPage() {
             </button>
           </div>
           {requirements.length === 0 && (
-            <p className="text-sm text-gray-400 text-center py-4">No requirements added. Click "Add Skill" to begin.</p>
+            <p className="text-sm text-gray-400 text-center py-4">No requirements added. Click &quot;Add Skill&quot; to begin.</p>
           )}
           <div className="space-y-3">
             {requirements.map((req, idx) => (
               <div key={idx} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
                 <select value={req.skillId} onChange={e => updateReq(idx, 'skillId', parseInt(e.target.value))}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
                   {skills.map(s => <option key={s.id} value={s.id}>{s.name} ({s.category})</option>)}
                 </select>
                 <input type="number" min={0} max={30} value={req.minYears}
                   onChange={e => updateReq(idx, 'minYears', parseInt(e.target.value) || 0)}
-                  className="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                   placeholder="Min yrs" />
                 <label className="flex items-center gap-1.5 text-sm text-gray-600 whitespace-nowrap">
                   <input type="checkbox" checked={req.isMandatory}
@@ -195,7 +194,7 @@ export default function NewJobPage() {
                     className="rounded" />
                   Mandatory
                 </label>
-                <button type="button" onClick={() => setRequirements(requirements.filter((_, i) => i !== idx))}
+                <button type="button" onClick={() => { setDirty(true); setRequirements(requirements.filter((_, i) => i !== idx)); }}
                   className="text-red-400 hover:text-red-600 p-1">
                   <Trash2 size={15} />
                 </button>
@@ -239,7 +238,7 @@ export default function NewJobPage() {
             {docTypes.map((doc, idx) => (
               <div key={idx} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
                 <select value={doc.docType} onChange={e => updateDoc(idx, 'docType', e.target.value)}
-                  className="w-40 px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  className="w-40 px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
                   <option value="CV_RESUME">CV / Resume</option>
                   <option value="CERTIFICATE">Certificate</option>
                   <option value="LICENSE">Licence</option>
@@ -249,14 +248,14 @@ export default function NewJobPage() {
                 <input type="text" value={doc.label}
                   onChange={e => updateDoc(idx, 'label', e.target.value)}
                   placeholder="Label (e.g. Valid Blasting Certificate)"
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500" />
                 <label className="flex items-center gap-1.5 text-sm text-gray-600 whitespace-nowrap">
                   <input type="checkbox" checked={doc.required}
                     onChange={e => updateDoc(idx, 'required', e.target.checked)} className="rounded" />
                   Required
                 </label>
                 {idx > 0 && (
-                  <button type="button" onClick={() => setDocTypes(docTypes.filter((_, i) => i !== idx))}
+                  <button type="button" onClick={() => { setDirty(true); setDocTypes(docTypes.filter((_, i) => i !== idx)); }}
                     className="text-red-400 hover:text-red-600 p-1">
                     <Trash2 size={15} />
                   </button>
@@ -272,8 +271,8 @@ export default function NewJobPage() {
             className="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50">
             Cancel
           </Link>
-          <button type="submit" disabled={loading}
-            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2.5 rounded-lg text-sm transition-colors disabled:opacity-50">
+          <button type="submit" disabled={loading} aria-busy={loading}
+            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2.5 rounded-lg text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
             {loading && <Loader2 size={15} className="animate-spin" />}
             {loading ? 'Saving...' : form.status === 'OPEN' ? 'Publish Job' : 'Save Draft'}
           </button>
